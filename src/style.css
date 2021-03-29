@@ -1,0 +1,16 @@
+@font-face {
+        font-family: "roboto-700";
+        src: url("./assets/fonts/roboto-700.ttf") format("truetype");
+      }
+@font-face {
+        font-family: "roboto-regular";
+        src: url("./assets/fonts/roboto-regular.ttf") format("truetype");
+      }
+@font-face {
+        font-family: "nunito-regular";
+        src: url("./assets/fonts/nunito-regular.ttf") format("truetype");
+      }
+@font-face {
+        font-family: "nunito-700";
+        src: url("./assets/fonts/nunito-700.ttf") format("truetype");
+      }
