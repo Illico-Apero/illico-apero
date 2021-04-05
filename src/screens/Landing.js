@@ -16,7 +16,7 @@ let days = ['Jeudi', 'Dimanche']
 //TODO : init isOpen according to current time & given opening times.
 let isOpen = true;
 
-class Landing extends React.Component
+export default class Landing extends React.Component
 {
     constructor(props)
     {
@@ -63,9 +63,10 @@ class Landing extends React.Component
                 }
                 <IllicoButton color='primary' text='Catalogue'/>
                 <IllicoButton color='primary' text='Inscription'/>
+
+                {/* TODO  'déjà inscrit' */}
+                {/* TODO Router, Links to different pages */}
             </div>
         );
     }
 }
-
-export default Landing;
