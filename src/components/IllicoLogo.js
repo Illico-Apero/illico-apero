@@ -8,8 +8,8 @@ export default class IllicoLogo extends React.Component {
                 <img 
                     src={logo} 
                     alt='Illico Apéro'
-                    width={150}
-                    height={155}
+                    width={130}
+                    height={135}
                     style={this.props.style}
                 />
             </div>

@@ -14,11 +14,9 @@ class IllicoButton extends React.Component
             <div>
                 <Button 
                 variant='contained'
-                color='primary' 
-                size='large'
+                color={this.props.color}
                 style={{
                     fontWeight:'bold',
-                    color:'white',
                     fontSize:18,
                     marginTop:'2%',
                     marginBottom:'2%'
