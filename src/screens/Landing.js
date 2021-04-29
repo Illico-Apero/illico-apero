@@ -1,4 +1,6 @@
 import React            from 'react';
+import { Link } from "react-router-dom";
+
 import Typography       from '@material-ui/core/Typography';
 import Slide            from '@material-ui/core/Slide';
 
@@ -7,6 +9,8 @@ import IllicoLogo       from '../components/IllicoLogo';
 
 import Opened           from '../components/Landing/Opened';
 import Closed           from '../components/Landing/Closed';
+
+
 
 
 //TODO : init with API (bachus)
@@ -39,8 +43,8 @@ export default class Landing extends React.Component
                 <Typography variant='h3' gutterBottom
                     style=
                     {{
-                        marginTop:'2%',
-                        color:'#b26a00'
+                        paddingTop:'2%',
+                        color:'#b26a00',
                     }}>
                     Bienvenue !
                 </Typography>
@@ -63,8 +67,8 @@ export default class Landing extends React.Component
                 }
                 <IllicoButton color='primary' text='Catalogue'/>
                 <IllicoButton color='primary' text='Inscription'/>
-
-                {/* TODO  'déjà inscrit' */}
+                <Link to="/Login">Déjà inscrit ?</Link>
+                
                 {/* TODO Router, Links to different pages */}
             </div>
         );
