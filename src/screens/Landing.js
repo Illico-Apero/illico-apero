@@ -9,6 +9,7 @@ import IllicoLogo       from '../components/IllicoLogo';
 
 import Opened           from '../components/Landing/Opened';
 import Closed           from '../components/Landing/Closed';
+import StyledLink from '../components/Generic/StyledLink';
 
 
 
@@ -18,7 +19,7 @@ let hours = ['21:00', '04:00'];
 let days = ['Jeudi', 'Dimanche']
 
 //TODO : init isOpen according to current time & given opening times.
-let isOpen = true;
+let isOpened = true;
 
 export default class Landing extends React.Component
 {
@@ -63,11 +64,16 @@ export default class Landing extends React.Component
                 </Typography>
                 {
                     // displays a green or red alert.
-                    isOpen? <Opened/> : <Closed/>
+                    isOpened? <Opened/> : <Closed/>
                 }
-                <IllicoButton color='primary' text='Catalogue'/>
-                <IllicoButton color='primary' text='Inscription'/>
-                <Link to="/Login">Déjà inscrit ?</Link>
+                <StyledLink to="/home">
+                    <IllicoButton color='primary' text='Catalogue'/>
+                </StyledLink>
+
+                <StyledLink to="/register">
+                    <IllicoButton color='primary' text='Inscription'/>
+                </StyledLink>
+                <StyledLink to="/login">Déjà inscrit ?</StyledLink>
                 
                 {/* TODO Router, Links to different pages */}
             </div>
