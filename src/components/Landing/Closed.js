@@ -8,8 +8,8 @@ export default class Closed extends React.Component {
                 severity="error" 
                 style=
                 {{
-                    marginTop:'3%',
-                    marginBottom:'3%',
+                    marginTop:'2em',
+                    marginBottom:'2em',
                     marginLeft:'auto',
                     marginRight:'auto',
 

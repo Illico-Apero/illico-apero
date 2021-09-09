@@ -8,8 +8,8 @@ export default class Opened extends React.Component {
                 severity="success" 
                 style=
                 {{
-                    marginTop:'3%',
-                    marginBottom:'3%',
+                    marginTop:'2em',
+                    marginBottom:'2em',
                     marginLeft:'auto',
                     marginRight:'auto',
 

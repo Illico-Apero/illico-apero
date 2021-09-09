@@ -1,5 +1,4 @@
 import React            from 'react';
-import { Link } from "react-router-dom";
 
 import Typography       from '@material-ui/core/Typography';
 import Slide            from '@material-ui/core/Slide';
@@ -9,7 +8,8 @@ import IllicoLogo       from '../components/IllicoLogo';
 
 import Opened           from '../components/Landing/Opened';
 import Closed           from '../components/Landing/Closed';
-import StyledLink from '../components/Generic/StyledLink';
+import StyledLink       from '../components/Generic/StyledLink';
+import NoDecorationLink from '../components/Generic/NoDecorationLink';
 
 
 
@@ -39,12 +39,13 @@ export default class Landing extends React.Component
 
     render()
     {
+        //TODO : RETURN CATALOG COMPONENT IF USER IS LOGGED IN (https://stackoverflow.com/questions/64319143/react-native-have-a-different-home-screen-for-new-users-and-older-users)
         return(
             <div>
                 <Typography variant='h3' gutterBottom
                     style=
                     {{
-                        paddingTop:'2%',
+                        paddingTop:'0.1em',
                         color:'#b26a00',
                     }}>
                     Bienvenue !
@@ -55,7 +56,7 @@ export default class Landing extends React.Component
                     mountOnEnter
                     unmountOnExit
                     timeout={800}>
-                        <IllicoLogo style={{marginBottom:'1%'}}/>
+                        <IllicoLogo style={{marginBottom:'0.4em'}}/>
                 </Slide>
                 <Typography variant='subtitle1' style={{whiteSpace: 'pre-line'}}>
                         Notre mission ?{'\n'}
@@ -66,14 +67,16 @@ export default class Landing extends React.Component
                     // displays a green or red alert.
                     isOpened? <Opened/> : <Closed/>
                 }
-                <StyledLink to="/home">
-                    <IllicoButton color='primary' text='Catalogue'/>
-                </StyledLink>
 
-                <StyledLink to="/register">
+                {/* TODO : make redirection directly with IllicoButton*/}
+                <NoDecorationLink to='/home'>
+                    <IllicoButton color='primary' text='Catalogue'/>
+                </NoDecorationLink>
+
+                <NoDecorationLink to='/register'>
                     <IllicoButton color='primary' text='Inscription'/>
-                </StyledLink>
-                <StyledLink to="/login">Déjà inscrit ?</StyledLink>
+                </NoDecorationLink>
+                <StyledLink to='/login'>Déjà inscrit ?</StyledLink>
                 
                 {/* TODO Router, Links to different pages */}
             </div>

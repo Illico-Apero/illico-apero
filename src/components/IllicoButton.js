@@ -3,13 +3,11 @@ import Button from '@material-ui/core/Button'
 
 /**
  * Basic Materiel UI Button
- * @param text : Modify the text property in order to
- * add a custom text
+ * @param color: the button color
+ * @param onClick: the button action
  */
 class IllicoButton extends React.Component
 {
-
-    //TODO :  Href into here passed with a prop
     render()
     {
         return(
@@ -17,11 +15,12 @@ class IllicoButton extends React.Component
                 <Button 
                 variant='contained'
                 color={this.props.color}
+                onClick={this.props.onClick}
                 style={{
                     fontWeight:'bold',
                     fontSize:18,
-                    marginTop:'2%',
-                    marginBottom:'2%'
+                    marginTop:'1em',
+                    marginBottom:'1.5em'
                 }}>
                     {this.props.text}
                 </Button>
