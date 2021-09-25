@@ -11,4 +11,8 @@ export default class RedirectionStateHandler {
             }
         };
     }
+
+    static getSlideDirection(defaultDirection, location) {
+        return (location.state === undefined) ? defaultDirection : location.state.slideDirection
+    }
 }

@@ -6,6 +6,7 @@ export default class Closed extends React.Component {
         return (
             <Alert 
                 severity="error" 
+                elevation={3}
                 style=
                 {{
                     marginTop:'2em',
@@ -13,8 +14,9 @@ export default class Closed extends React.Component {
                     marginLeft:'auto',
                     marginRight:'auto',
 
-                    width:'290px',
-                    textAlign:'left'
+                    width:'260px',
+                    textAlign:'left',
+                    fontFamily:'Tisa'
                 }}>
                 Nous sommes actuellement fermés 😪 {'\n'}
                 Vous pouvez tout de même consulter {'\n'}

@@ -1,6 +1,7 @@
 import React from 'react'
 import Slide from '@material-ui/core/Slide';
 
+
 export default class DefaultComponent extends React.Component {
 
     constructor(props) {
@@ -30,3 +31,24 @@ export default class DefaultComponent extends React.Component {
         )
     }
 }
+
+// export default function DefaultComponent() {
+
+//     React.useEffect(() => {
+//         //onMount
+//         console.log('component mounted')
+        
+//         // onUnMount
+//         return () => {
+//           console.log('component will unmount')
+//         }
+//       }, [])
+
+//     return (
+//         <div>
+//         </div>
+//     )
+// }
+
+
+

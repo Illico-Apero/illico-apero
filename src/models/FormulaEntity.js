@@ -9,7 +9,7 @@ export default class FormulaEntity {
      * @param {String} description 
      * @param {Number} price 
      * @param {String} picturePath 
-     * @param {FormulaProductsEntity[]} formulaProductsByIdFormula 
+     * @param {Array<FormulaProductsEntity>} formulaProductsByIdFormula 
      */
     constructor(idFormula, name, description, price, picturePath, formulaProductsByIdFormula) {
         this.idFormula = idFormula;

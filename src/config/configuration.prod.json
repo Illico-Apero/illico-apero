@@ -3,5 +3,11 @@
         "url": "TODO",
         "port": 8080,
         "baseUrl": "https://TODO:8080/api/v1"
+    },
+    "endpoints": {
+        "getDeliveryRadius": "address/get-delivery-radius",
+        "signUp": "user/sign-up",
+        "signIn": "user/sign-in",
+        "saveLog": "log/save"
     }
 }

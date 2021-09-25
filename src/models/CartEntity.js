@@ -7,7 +7,7 @@ export default class CartEntity {
      * @param {Number} idCart 
      * @param {String} updatedAt 
      * @param {Number} totalPrice 
-     * @param {CartProductsEntity[]} cartProductsByIdCart 
+     * @param {Array<CartProductsEntity>} cartProductsByIdCart 
      */
     constructor(idCart, updatedAt, totalPrice, cartProductsByIdCart) {
         this.idCart = idCart;

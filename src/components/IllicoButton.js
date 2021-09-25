@@ -13,6 +13,7 @@ class IllicoButton extends React.Component
         return(
             <div>
                 <Button 
+                disabled={this.props.disabled}
                 variant='contained'
                 color={this.props.color}
                 onClick={this.props.onClick}
@@ -20,7 +21,8 @@ class IllicoButton extends React.Component
                     fontWeight:'bold',
                     fontSize:18,
                     marginTop:'1em',
-                    marginBottom:'1.5em'
+                    marginBottom:'1.5em',
+                    
                 }}>
                     {this.props.text}
                 </Button>

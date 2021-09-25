@@ -6,6 +6,7 @@ export default class Opened extends React.Component {
         return (
             <Alert 
                 severity="success" 
+                elevation={3}
                 style=
                 {{
                     marginTop:'2em',
@@ -13,8 +14,9 @@ export default class Opened extends React.Component {
                     marginLeft:'auto',
                     marginRight:'auto',
 
-                    width:'310px',
-                    textAlign:'left'
+                    width:'320px',
+                    textAlign:'left',
+                    fontFamily:'Tisa'
                 }}>
                 Nous sommes actuellement ouvert ! 🍻🎉
             </Alert>

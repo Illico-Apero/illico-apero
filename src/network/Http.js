@@ -13,8 +13,8 @@ export default class Http {
             method: 'GET',
             headers:{
                 Accept: 'application/json',
-                'Content-Type' : "application/json",
-                'Authorization': 'Bearer ' + jwt
+                'Content-Type' : 'application/json',
+                'Authorization': 'Bearer ' + jwt,
             },
         }).then((response) => response.json())
         .then( (data) => 
@@ -23,6 +23,28 @@ export default class Http {
         })
         .catch((error) => console.warn(error));
     }
+
+        /**
+         * 
+         * @param {String} url 
+         * @param {Function} callback 
+         */
+        static getWithoutJwt(url, callback)
+        {
+            fetch(url, 
+            {
+                method: 'GET',
+                headers:{
+                    'Accept': 'application/json',
+                    'Content-Type' : 'application/json',
+                },
+            }).then((response) => response.json())
+            .then( (data) => 
+            {
+                callback(data);
+            })
+            .catch((error) => console.warn(error));
+        }
 
 
     /**
@@ -38,9 +60,9 @@ export default class Http {
         {
             method: 'POST',
             headers:{
-                Accept: 'application/json',
-                'Content-Type' : "application/json",
-                'Authorization': 'Bearer ' + jwt
+                'Accept': 'application/json',
+                'Content-Type' : 'application/json',
+                'Authorization': 'Bearer ' + jwt,
             },
             body:body
         }).then((response) => response.json())
@@ -62,8 +84,8 @@ export default class Http {
         {
             method: 'POST',
             headers:{
-                Accept: 'application/json',
-                'Content-Type' : "application/json"
+                'Accept': 'application/json',
+                'Content-Type' : "application/json",
             },
             body:body
         }).then((response) => response.text())

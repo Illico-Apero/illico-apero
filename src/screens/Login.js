@@ -1,38 +1,212 @@
 import React        from 'react'
 import Slide        from '@material-ui/core/Slide';
-//import TextField    from '@material-ui/core/TextField';
+import FormControl  from '@material-ui/core/FormControl';
+import TextField    from '@material-ui/core/TextField';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
+import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
+import FormValidator from '../utils/FormValidator';
+import IllicoButton from '../components/IllicoButton';
+import StyledLink       from '../components/Generic/StyledLink';
+import UserService from '../network/services/UserService';
+import FrontEndLogService from '../network/services/FrontEndLogService';
+import UserEntity from '../models/UserEntity';
+import ApiResponse from '../models/api/ApiResponse';
+import Utils from '../utils/Utils';
+import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
+
+
+
+//TODO : display a message "already logged in" or redirect to home if already logged in.
 
 export default class Login extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state =
-        {
+        this.state = {
             loaded: false,
+            isUserLoggedIn: false,
+            isLoading: false,
+            nameFromApi: '',
+            openLoggedInOkAlert: false,
+            openLoggedInErrorAlert: false,
+            failReason: '',
+            form: {
+                email:  '',
+                password: ''
+            },
+            errors: {
+                emailError:false,
+                emailHelper:'',
+                passwordError:false,
+                passwordHelper:'',
+            }
         }
-        this.validateForm = this.validateForm.bind(this);
+        this.userService = new UserService();
+        this.frontEndLogService = new FrontEndLogService();
+    }
+
+
+    handleCloseOpenLoggedInErrorAlert(event, reason) {
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({openLoggedInErrorAlert : false});
+    }
+
+    handleCloseOpenLoggedInOkAlert(event, reason) {
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({openLoggedInOkAlert : false});
     }
 
     componentDidMount() {
-        this.setState({loaded:true});
+        this.setState({isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn'))}, () => {
+            this.setState({loaded:true});
+        });
+    }
+
+    /**
+    * Triggered everytime a form field changes (checkbox or textfield)
+    * @param {*} fieldId 
+    * @param {*} newValue 
+    */
+    updateFormValue(fieldId, newValue) {
+        let updatedForm = this.state.form;
+        updatedForm[fieldId] = newValue;
+        this.setState( {
+            form: updatedForm
+        });
+
+        if(fieldId === 'email') {
+            this.updateError(FormValidator.isEmailValid, newValue, 'emailError', 'emailHelper', "L'email est invalide");
+        }
+        else if(fieldId === "password") {
+            this.updateError(FormValidator.isPasswordInBounds, newValue, 'passwordError', 'passwordHelper', "Doit être compris entre 8 et 32 caractères");
+        }
+    }
+
+    /**
+    * 
+    * @param {Function} isValid 
+    * @param {String} newValue 
+    * @param {String} errorKey 
+    * @param {String} helperKey 
+    * @param {String} errorHelperText 
+    */
+    updateError(isValid, newValue, errorKey, helperKey, errorHelperText) {
+        let updatedErrors = this.state.errors;
+        if(isValid(newValue) || newValue === '') {
+            updatedErrors[errorKey] = false;
+            updatedErrors[helperKey] = '';
+        }
+        else {
+            updatedErrors[errorKey] = true;
+            updatedErrors[helperKey] = errorHelperText;
+        }
+    }
+
+    handleSubmit() {
+        if(this.validateForm()) {
+            this.setState({isLoading:true})
+            let form = this.state.form;
+            let userEntity = new UserEntity(null, form.email, form.password, null, null, null, null);
+
+            // SIGNING IN USER //
+            this.userService.signIn(userEntity, async (data) => {
+                /** @type ApiResponse */
+                let apiResponse = JSON.parse(data);
+                if(apiResponse.status === ApiResponse.GET_SUCCESS()) {
+                    this.setState({openLoggedInOkAlert: true})
+                    userEntity = apiResponse.response.userEntity; // we replace the whole user so we retrieve all neccesaries foreign keys and so on
+                    userEntity.jwt = apiResponse.response.jwt;
+                    
+                    // STORING USER DATA IN LOCAL STORAGE //
+                    localStorage.setItem('isUserLoggedIn', JSON.stringify(true));
+                    delete userEntity.password; // removes password from local storage. we never know...
+                    localStorage.setItem('userEntity', JSON.stringify(userEntity));
+                    // REDIRECTING USER TO HOME //
+                    await Utils.timeout(1500); // waits for 1500ms
+
+                    this.props.history.push("/home"); // redirection 👌
+                    this.setState({isLoading:false})
+                }
+                else {
+                    console.error("Could not log in the user : " + JSON.stringify(apiResponse));
+                    if(apiResponse.response.includes("The given email is not registered")) {
+                        this.setState({failReason:"L'email n'est pas enregistrée ❌"})
+                    }
+                    else if(apiResponse.response.includes("The given password is incorrect")) {
+                        this.setState({failReason:'Mot de passe inccorect ❌'})
+                    }
+                    else {
+                        this.setState({failReason:'Une erreur inconnue est survenue... Contactez-nous pour identifier le problème 💌 !'})
+                        this.frontEndLogService.saveLog(null, "Could not log in user : "  + JSON.stringify(userEntity)  + " (" + JSON.stringify(apiResponse.response) + ")");
+                    }
+                    this.setState({openLoggedInErrorAlert: true})
+                }
+            })
+
+            this.setState({isLoading:false})
+        }
     }
 
     validateForm() {
+        let errors = this.state.errors;
+        let form = this.state.form;
 
+        return errors.emailError            === false
+            && errors.passwordError         === false
+            && form.email                    !== ''
+            && form.password                 !== '';
     }
 
     render() {
+        const buttonStyle = {
+            marginTop:'0.7em',
+            marginBottom:'0.7em',
+            width:'16em'
+        }
+
+        const previousPageRedirection = RedirectionStateHandler.getRedirectionStateWithSlideDown(this.props.location);
+        // à gauche par défaut ou bien donné par les props
+        const slideDirection =  RedirectionStateHandler.getSlideDirection('left', this.props.location);
+
         return (
-            <Slide  
-            direction='down'
-            in={this.state.loaded}
-            mountOnEnter
-            unmountOnExit
-            timeout={800}>
-                <div>
-                    {/* TODO */ }
-                    Login
-                </div>
+            <Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
+            <div>
+                    <IllicoSimpleAppBar to={previousPageRedirection} title='Connexion'/>
+                    <FormControl>
+                        <TextField id='email'      error={this.state.errors.emailError}    helperText={this.state.errors.emailHelper}    size='small' variant='outlined' required={true} style={buttonStyle} type='email'    label='Adresse e-mail' onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} }/> <br/>
+                        <TextField id='password'   error={this.state.errors.passwordError} helperText={this.state.errors.passwordHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe'   onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}}/> <br/>
+                        
+                        {this.state.isLoading ? 
+                            <div>
+                                <CircularProgress/>
+                            </div>
+                            : null}
+                        <IllicoButton disabled={this.state.isLoading} color='primary' text="Me connecter !" onClick={ () => this.handleSubmit()}/>
+
+                        <StyledLink to='/forgotten-password'>Mot de passe oublié ?</StyledLink>
+                    </FormControl>
+
+                        {/* CONNECTED SNACKBAR */}
+                        <Snackbar open={this.state.openLoggedInOkAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseOpenLoggedInOkAlert(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseOpenLoggedInOkAlert(event, reason)} severity="success">
+                                Hey {this.state.nameFromApi} 🍻 ! Redirection en cours... 
+                            </MuiAlert>
+                        </Snackbar>
+
+                        {/* FAIL SNACKBAR */}
+                        <Snackbar open={this.state.openLoggedInErrorAlert} autoHideDuration={5000} onClose={(event, reason) => this.handleCloseOpenLoggedInErrorAlert(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseOpenLoggedInErrorAlert(event, reason)} severity="error">
+                                {this.state.failReason}
+                            </MuiAlert>
+                        </Snackbar>
+            </div>
             </Slide>
         )
     }

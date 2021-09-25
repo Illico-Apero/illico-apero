@@ -11,9 +11,9 @@ export default class OrderEntity {
      * @param {Number} fkUserPersonalInformation 
      * @param {Number} stripePaymentIntentId 
      * @param {Number} totalPrice 
-     * @param {OrderProductsEntity[]} orderProductsByIdOrder 
+     * @param {Array<OrderProductsEntity>} orderProductsByIdOrder 
      * @param {StatusEntity} statusByFkStatus
-     * @param {UserPersonalInformationsEntity} userPersonalInformationsByFkUserPersonalInformations
+     * @param {Array<UserPersonalInformationsEntity>} userPersonalInformationsByFkUserPersonalInformations
      */
     constructor(idOrder, fkStatus, fkUserPersonalInformation, stripePaymentIntentId, totalPrice,
                 orderProductsByIdOrder, statusByFkStatus, userPersonalInformationsByFkUserPersonalInformations) {
