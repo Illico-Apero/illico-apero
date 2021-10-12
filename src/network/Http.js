@@ -1,3 +1,5 @@
+import ApiResponse from "../models/api/ApiResponse";
+
 export default class Http {
 
     /**
@@ -21,7 +23,12 @@ export default class Http {
         {
             callback(data);
         })
-        .catch((error) => console.warn(error));
+        .catch(
+            (error) => {
+                console.error(error)
+                let errorData = JSON.stringify(new ApiResponse(ApiResponse.GET_ERROR(), error));
+                callback(errorData);
+            });
     }
 
         /**
@@ -43,7 +50,12 @@ export default class Http {
             {
                 callback(data);
             })
-            .catch((error) => console.warn(error));
+            .catch(
+            (error) => {
+                console.error(error)
+                let errorData = JSON.stringify(new ApiResponse(ApiResponse.GET_ERROR(), error));
+                callback(errorData);
+            });
         }
 
 
@@ -70,7 +82,12 @@ export default class Http {
         {
             callback(data);
         })
-        .catch((error) => console.warn(error));
+        .catch(
+            (error) => {
+                console.error(error)
+                let errorData = JSON.stringify(new ApiResponse(ApiResponse.GET_ERROR(), error));
+                callback(errorData);
+            });
     }
 
     /**
@@ -93,6 +110,11 @@ export default class Http {
         {
             callback(data);
         })
-        .catch((error) => console.warn(error));
+        .catch(
+            (error) => {
+                console.error(error)
+                let errorData = JSON.stringify(new ApiResponse(ApiResponse.GET_ERROR(), error));
+                callback(errorData);
+            });
     }
 }

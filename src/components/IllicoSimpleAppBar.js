@@ -5,6 +5,7 @@ import IconButton from '@material-ui/core/IconButton';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
+import IllicoAudio from '../utils/IllicoAudio';
 
 /**
  * Basic App Bar
@@ -17,7 +18,7 @@ export class IllicoSimpleAppBar extends React.Component {
         return (
             <AppBar position='static' style={{ marginBottom: '1.5em' }}>
                 <Toolbar>
-                    <IconButton component={Link} edge='start' aria-label='back' to={this.props.to}>
+                    <IconButton component={Link} edge='start' aria-label='back' to={this.props.to} onClick={() => IllicoAudio.playNavigationBackwardAudio()}>
                         <ArrowBackIosIcon color='action' />
                     </IconButton>
                     <Typography variant='h5' style={{ color: '#fff', fontWeight: 'bold' }}>

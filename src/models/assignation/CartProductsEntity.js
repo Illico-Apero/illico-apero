@@ -9,10 +9,11 @@ export default class CartProductsEntity {
      * @param {Number} fkProduct 
      * @param {ProductEntity} productByFkProduct 
      */
-    constructor(idCartProducts, fkCart, fkProduct, productByFkProduct) {
+    constructor(idCartProducts, fkCart, fkProduct, quantity, productByFkProduct) {
         this.idCartProducts = idCartProducts;
         this.fkCart = fkCart;
         this.fkProduct = fkProduct;
+        this.quantity = quantity;
         this.productByFkProduct = productByFkProduct;
     }
 }

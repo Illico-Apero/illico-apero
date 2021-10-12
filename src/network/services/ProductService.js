@@ -14,4 +14,10 @@ export default class ProductService {
             callback(data);
         });
     }
+
+    getProductsFromCategory(category, callback) {
+        Http.getWithoutJwt(configuration.server.baseUrl + configuration.endpoints.getProducts + '/' + category, (data) => {
+            callback(data);
+        });
+    }
 }

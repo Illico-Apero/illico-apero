@@ -1,8 +1,7 @@
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import NoDecorationLink from './Generic/NoDecorationLink';
-import { Height } from '@material-ui/icons';
-import Grid from '@material-ui/core/Grid';
+import { CircularProgress } from '@material-ui/core';
 
 
 /**
@@ -33,9 +32,9 @@ class IllicoCategory extends React.Component
                             alt={this.props.image}
                             style={{
                                 aspectRatio:1/1,
-                                width:200
+                                width:200,
                             }}
-                            />
+                        />
                     </Paper>
                 </NoDecorationLink>
             </div>

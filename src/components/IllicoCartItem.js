@@ -1,7 +1,8 @@
 import React from 'react'
 import Slide from '@material-ui/core/Slide';
 
-export default class DefaultComponent extends React.Component {
+
+export default class IllicoCartItem extends React.Component {
 
     constructor(props) {
         super(props);

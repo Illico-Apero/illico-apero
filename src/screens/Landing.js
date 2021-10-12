@@ -10,6 +10,7 @@ import Opened           from '../components/Landing/Opened';
 import Closed           from '../components/Landing/Closed';
 import StyledLink       from '../components/Generic/StyledLink';
 import NoDecorationLink from '../components/Generic/NoDecorationLink';
+import IllicoAudio from '../utils/IllicoAudio';
 
 
 
@@ -36,7 +37,29 @@ export default class Landing extends React.Component {
     }
 
     render() {
-        //TODO : IF USER IS LOGGED IN, DISPLAY PROFILE BUTTON / MENU ABOVE ??? IDK
+
+        const registerRedirectState = {
+            pathname: '/register',
+            state: {
+                backUrl:'/',
+                slideDirection:'left'
+            }
+        }
+        const homeRedirectState = {
+            pathname: '/home',
+            state: {
+                backUrl:'/',
+                slideDirection:'left'
+            }
+        }
+
+        const loginRedirectState = {
+            pathname: '/login',
+            state: {
+                backUrl:'/',
+                slideDirection:'left'
+            }
+        }
 
         return(
             <div>
@@ -63,8 +86,8 @@ export default class Landing extends React.Component {
                 }
 
                 {/* TODO : make redirection directly with IllicoButton*/}
-                <NoDecorationLink to='/home'>
-                    <IllicoButton color='primary' text='Catalogue'/>
+                <NoDecorationLink to={homeRedirectState}>
+                    <IllicoButton color='primary' text='Catalogue' onClick={() => IllicoAudio.playTapAudio()}/>
                 </NoDecorationLink>
 
                 {
@@ -72,10 +95,12 @@ export default class Landing extends React.Component {
                     null
                     :
                     <div>
-                    <NoDecorationLink to='/register'>
-                        <IllicoButton color='primary' text='Inscription'/>
-                    </NoDecorationLink>
-                    <StyledLink to='/login'>Déjà inscrit ?</StyledLink>
+                        <NoDecorationLink to={registerRedirectState}>
+                            <IllicoButton color='primary' text='Inscription' onClick={() => IllicoAudio.playTapAudio()}/>
+                        </NoDecorationLink>
+                        <div onClick={() => IllicoAudio.playTapAudio()}>
+                            <StyledLink to={loginRedirectState}>Déjà inscrit ?</StyledLink>
+                        </div>
                     </div>
                 }
 

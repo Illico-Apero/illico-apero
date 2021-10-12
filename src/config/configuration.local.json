@@ -8,9 +8,15 @@
         "getDeliveryRadius": "address/get-delivery-radius",
         "signUp": "user/sign-up",
         "signIn": "user/sign-in",
+        "refreshToken": "user/refresh-token",
+        "testToken": "user/test-token",
         "saveLog": "log/save",
         "getCategories": "product/get-categories",
         "getProducts": "product/get-products",
-        "getFormulas": "formula/get-formulas"
+        "getFormulas": "formula/get-formulas",
+        "addProductToCart": "cart/add-product",
+        "addFormulaToCart": "cart/add-formula",
+        "getAmountInCart": "cart/amount-in-cart",
+        "getCart": "cart/get-cart"
     }
 }

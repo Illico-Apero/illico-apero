@@ -1,5 +1,7 @@
 import React from 'react'
 import Slide from '@material-ui/core/Slide';
+import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
+import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
 
 export default class ForgottenPassword extends React.Component {
 
@@ -15,12 +17,16 @@ export default class ForgottenPassword extends React.Component {
     }
 
     render() {
+        const previousPageRedirection = RedirectionStateHandler.getRedirectionStateWithSlideLeft(this.props.location);
+        // en bas par défaut ou bien donné par les props
+        const slideDirection =  RedirectionStateHandler.getSlideDirection('down', this.props.location);
         return (
-            <Slide direction='down' in={this.state.loaded} mountOnEnter unmountOnExit timeout={800}>
-                <div>
-                    Forgotten Password page
-                </div>
-            </Slide>
+            <div>
+                <IllicoSimpleAppBar to={previousPageRedirection} title='Mot de passe oublié ?'/>
+                    <Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={800}>
+                    <div></div>
+                    </Slide>
+            </div>
         )
     }
 }

@@ -10,11 +10,10 @@ export default class OrderProductsEntity {
      * @param {Number} quantity 
      * @param {ProductEntity} productByFkProduct 
      */
-    constructor(idOrderProducts, fkOrder, fkProducts, quantity, productByFkProduct) {
+    constructor(idOrderProducts, fkOrder, fkProducts, productByFkProduct) {
         this.idOrderProducts = idOrderProducts;
         this.fkOrder = fkOrder;
         this.fkProducts = fkProducts;
-        this.quantity = quantity;
         this.productByFkProduct = productByFkProduct;
     }
 }

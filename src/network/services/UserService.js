@@ -25,4 +25,16 @@ export default class UserService {
             callback(data);
         });
     }
+
+    testToken(jwt, callback) {
+        Http.get(configuration.server.baseUrl + configuration.endpoints.testToken, jwt, (data) => {
+            callback(data);
+        })
+    }
+
+    refreshToken(userEntity, callback) {
+        Http.postWithoutJwt(configuration.server.baseUrl + configuration.endpoints.refreshToken, JSON.stringify(userEntity), (data) => {
+            callback(data);
+        })
+    }
 }

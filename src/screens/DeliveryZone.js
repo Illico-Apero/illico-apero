@@ -1,3 +1,4 @@
+import { CircularProgress } from '@material-ui/core';
 import React from 'react'
 
 import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
@@ -10,6 +11,7 @@ export default class DeliveryZone extends React.Component {
         super(props);
         this.state = {
             loaded: false,
+            loadingMap:true
         }
     }
 
@@ -20,13 +22,25 @@ export default class DeliveryZone extends React.Component {
 
 
     render() {
+
+        const deliveryZoneRedirectState = {
+            pathname: '/register',
+            state: {
+                backUrl:'/'
+            }
+        }
         // according to the previous page passed within the props, we use it as a return page for the AppBar. By default, we use '/' (home)
-        const previousPageRedirection = RedirectionStateHandler.getRedirectionStateWithSlideDown(this.props.location);
 
         return (
             <div>
-            <IllicoSimpleAppBar to={previousPageRedirection} title='Zone de livraison éligible'/>
-                    <iframe title='Zone de livraison' src='https://www.google.com/maps/d/u/7/embed?mid=1H6RJdFJUEo1yU8Gkru2unwQFGlWEEuB7' width='320' height='500' style={{marginTop: '1em'}} />
+            <IllicoSimpleAppBar to={deliveryZoneRedirectState} title='Zone de livraison éligible'/>
+                <div>
+                    {
+                        this.state.loadingMap ?
+                        (<CircularProgress/>) : null
+                    }
+                </div>
+                <iframe title='Zone de livraison' src='https://www.google.com/maps/d/u/7/embed?mid=1YcDz6iXrPTfl-pG2Maao8EnNaZoxNnYL' width='320' height='500' style={{marginTop: '1em'}} onLoad={() => this.setState({loadingMap:false})}/>
             </div>
         )
     }

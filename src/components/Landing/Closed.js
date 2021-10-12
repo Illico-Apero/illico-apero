@@ -21,7 +21,7 @@ export default class Closed extends React.Component {
                 Nous sommes actuellement fermés 😪 {'\n'}
                 Vous pouvez tout de même consulter {'\n'}
                 notre catalogue !
-        </Alert>
+            </Alert>
         )
     }
 }

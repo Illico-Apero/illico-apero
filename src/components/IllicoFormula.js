@@ -5,6 +5,9 @@ import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
+import IllicoAddToBasket from './IllicoAddToBasket';
+import { Divider } from '@material-ui/core';
+import IllicoAudio from '../utils/IllicoAudio';
 
 /**
  * Illico Apero Product Category
@@ -38,21 +41,19 @@ class IllicoFormula extends React.Component
                         }}
                     />
                     <CardContent>
-                    <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontWeight:'Bold', textAlign:'left'}}>
-                        {this.props.title}
-                    </Typography>
-                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.9em', textAlign:'left'}}>
-                        {this.props.description}
-                    </Typography>
-                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.8em', textAlign:'left'}}>
-                        {this.props.price + ' €'}
-                    </Typography>
+                        <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontWeight:'Bold', textAlign:'left'}}>
+                            {this.props.title}
+                        </Typography>
+                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.9em', textAlign:'left'}}>
+                            {this.props.description}
+                        </Typography>
+                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.8em', textAlign:'left'}}>
+                            {this.props.price + ' €'}
+                        </Typography>
                     </CardContent>
+                    <Divider/>
                     <CardActionArea onClick={this.props.onBasketAddClick}>
-                        <div style={{marginLeft:'auto', marginRight:'auto'}}>
-                            <Chip label='Ajouter au panier 🛒' color='secondary' clickable 
-                            style={{marginBottom:'0.4em', fontWeight:'bold', color:'#ffffff', fontFamily:'Tisa'}}/>
-                        </div>
+                        <IllicoAddToBasket/>
                     </CardActionArea>
                 </Card>
             </div>

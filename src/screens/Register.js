@@ -23,10 +23,15 @@ import ApiResponse from '../models/api/ApiResponse';
 import FrontEndLogService from '../network/services/FrontEndLogService';
 import Utils from '../utils/Utils';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
+import IllicoAudio from '../utils/IllicoAudio';
 
 
 //TODO : display a message "already logged in" or redirect to home if already logged in.
 
+/**
+ * @param {Boolean} hideTopAppBar
+ * @param {Boolean} useNegativeZIndex
+ */
 export default class Register extends React.Component {
 
     constructor(props) {
@@ -95,34 +100,36 @@ export default class Register extends React.Component {
         if (reason === 'clickaway') {
             return;
         }
+        IllicoAudio.playTapAudio();
         this.setState({openLegalTermsAlert : false});
     }
-
     handleCloseMajorityAlert(event, reason) {
         if (reason === 'clickaway') {
             return;
         }
+        IllicoAudio.playTapAudio();
         this.setState({openMajorityAlert : false});
     }
-
     handleCloseMainAlert(event, reason) {
         if (reason === 'clickaway') {
             return;
         }
+        IllicoAudio.playTapAudio();
         this.setState({openMainAlert : false});
     }
-
     handleCloseOpenAccountCreationOkAlert(event, reason) {
         if (reason === 'clickaway') {
             return;
         }
+        IllicoAudio.playTapAudio();
         this.setState({openAccountCreationOkAlert : false});
     }
-
     handleCloseOpenAccountCreationErrorAlert(event, reason) {
         if (reason === 'clickaway') {
+            
             return;
         }
+        IllicoAudio.playTapAudio();
         this.setState({openAccountCreationErrorAlert : false});
     }
 
@@ -223,7 +230,7 @@ export default class Register extends React.Component {
 
                     let form = this.state.form;
                     let userPersonalInformationsEntity = new UserPersonalInformationsEntity(null, form.firstname, form.surname, form.phone, form.addressObject);
-                    let userEntity = new UserEntity(null, form.email, form.password, null, null, null, userPersonalInformationsEntity);
+                    let userEntity = new UserEntity(null, null, form.email, form.password, null, null, null, userPersonalInformationsEntity);
 
                     // SIGNING UP USER //
                     this.userService.signUp(userEntity, 
@@ -231,11 +238,12 @@ export default class Register extends React.Component {
                         /** @type ApiResponse */
                         let apiResponse = JSON.parse(data);
                         if(apiResponse.status === ApiResponse.GET_SUCCESS()) {
-                            console.log("Account well created !");
+                            console.info("Account well created !");
+                            IllicoAudio.playRegisterOrLogInAudio();
                             this.setState({openAccountCreationOkAlert: true})
 
                             // SIGNING IN USER //
-                            this.userService.signIn(userEntity, async (data) => {
+                            this.userService.signIn(userEntity, (data) => {
                                 /** @type ApiResponse */
                                 let apiResponse = JSON.parse(data);
                                 if(apiResponse.status === ApiResponse.GET_SUCCESS()) {
@@ -243,14 +251,16 @@ export default class Register extends React.Component {
                                     userEntity.jwt = apiResponse.response.jwt;
 
                                     // STORING USER DATA IN LOCAL STORAGE //
-                                    localStorage.setItem('isUserLoggedIn', JSON.stringify(true));
-                                    delete userEntity.password; // removes password from local storage. we never know...
+                                    localStorage.setItem('isUserLoggedIn', JSON.stringify(true)); // password is hashed in there
                                     localStorage.setItem('userEntity', JSON.stringify(userEntity));
+                                    localStorage.setItem('lastLogin', JSON.stringify(Date.now()));
 
-                                    // REDIRECTING USER //
-                                    await Utils.timeout(1500); // waits for 1500ms
-                                    this.setState({isLoading:false})
-                                    this.props.history.push("/home"); // redirection 👌
+                                    // REDIRECTING USER
+                                    setTimeout(() => {
+                                        this.props.history.push("/home"); // redirection 👌
+                                        this.setState({isLoading:false})
+                                    }, 1500); // waits for 1500ms
+
                                 }
                                 else {
                                     console.error("Could not log in the user : " + JSON.stringify(apiResponse));
@@ -269,21 +279,25 @@ export default class Register extends React.Component {
                                 this.setState( { accountCreationErrorText: "Oups... Votre compte n'a pas pu être créé... Réessayez plus tard ou contactez-nous 💌 !"});
                             }
                             this.frontEndLogService.saveLog(null, "Unknown account creation error with user : " + JSON.stringify(userEntity) + "(" + apiResponse.response + ")");
+                            IllicoAudio.playAlertAudio();
                             this.setState({openAccountCreationErrorAlert: true})
+                            this.setState({isLoading:false});
                         }
-                        this.setState({isLoading:false})
                     });
 
                 }
                 else {
+                    IllicoAudio.playAlertAudio();
                     this.setState({openLegalTermsAlert : true})
                 }
             }
             else {
+                IllicoAudio.playAlertAudio();
                 this.setState({openMajorityAlert : true})
             }
         }
         else {
+            IllicoAudio.playAlertAudio();
             this.setState({openMainAlert: true});
         }
     }
@@ -316,7 +330,8 @@ export default class Register extends React.Component {
         const buttonStyle = {
             marginTop:'0.7em',
             marginBottom:'0.7em',
-            width:'16em'
+            width:'16em',
+            zIndex: this.props.useNegativeZIndex ? -1 : 0
         }
         
         // Those are the states we need to passe to subPages, so that they are aware of the context : then we can use 'back' redirection from sub pages.
@@ -333,6 +348,7 @@ export default class Register extends React.Component {
                 backUrl:'/register'
             }
         }
+        
         const previousPageRedirection = RedirectionStateHandler.getRedirectionStateWithSlideDown(this.props.location);
         // on va à gauche par défaut, ou bien à la direction donnée par les props
         const slideDirection =  RedirectionStateHandler.getSlideDirection('left', this.props.location);
@@ -344,32 +360,39 @@ export default class Register extends React.Component {
         });
 
         return (
-            <Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
-                <div>
-                    <IllicoSimpleAppBar to={previousPageRedirection} title='Inscription'/>
+            <div>
+                {
+                    this.props.hideTopAppBar ?
+                    ''
+                    :
+                    <IllicoSimpleAppBar to={previousPageRedirection === undefined ? '/' : previousPageRedirection} title='Inscription'/>
+                }
+
+                <Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
                     <FormControl>
-                        <TextField id='email'               error={this.state.errors.emailError}            helperText={this.state.errors.emailHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='email'    label='Adresse e-mail'            onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} }/> <br/>
-                        <TextField id='password'            error={this.state.errors.passwordError}         helperText={this.state.errors.passwordHelper}                 size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe'              onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}}/> <br/>
-                        <TextField id='passwordConfirm'    error={this.state.errors.passwordConfirmError} helperText={this.state.errors.passwordConfirmHelper}         size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Confirmer le mot de passe' onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}}/> <br/>
-                        <TextField id='firstname'           error={this.state.errors.firstname_error}        helperText={this.state.errors.firstnameHelper}                size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Prénom'                    onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}}/> <br/>
-                        <TextField id='surname'             error={this.state.errors.surnameError}          helperText={this.state.errors.surnameHelper}                  size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Nom'                       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}}/> <br/>
-                        <TextField id='phone'               error={this.state.errors.phoneError}            helperText={this.state.errors.phoneHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='tel'      label='Numéro de téléphone'       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :10}} /> <br/>
+                        <TextField id='email'               error={this.state.errors.emailError}            helperText={this.state.errors.emailHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='email'    label='Adresse e-mail'            onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
+                        <TextField id='password'            error={this.state.errors.passwordError}         helperText={this.state.errors.passwordHelper}                 size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe'              onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}} onClick={() => IllicoAudio.playTapAudio()} /> <br/>
+                        <TextField id='passwordConfirm'    error={this.state.errors.passwordConfirmError} helperText={this.state.errors.passwordConfirmHelper}         size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Confirmer le mot de passe' onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
+                        <TextField id='firstname'           error={this.state.errors.firstname_error}        helperText={this.state.errors.firstnameHelper}                size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Prénom'                    onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
+                        <TextField id='surname'             error={this.state.errors.surnameError}          helperText={this.state.errors.surnameHelper}                  size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Nom'                       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
+                        <TextField id='phone'               error={this.state.errors.phoneError}            helperText={this.state.errors.phoneHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='tel'      label='Numéro de téléphone'       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :10}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         
                         <Autocomplete id="address_autocomplete" options={addresses} getOptionLabel={(option) => FormValidator.formatAddress(option)} 
                         filterOptions={filterOptions} clearOnEscape onChange={(event, value) => {this.isAddressEligible(event, value)}}
                             renderInput={(params) => ( 
-                            <TextField {...params} id="address" label="Addresse" variant="outlined" 
+                            <TextField {...params} id="address" label="Addresse" variant="outlined" style={{zIndex: this.props.useNegativeZIndex ? -1 : 0}}
                             onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)}}
                             helperText={this.state.errors.addressHelper} error={this.state.errors.addressError}
+                            onClick={() => IllicoAudio.playTapAudio()}
                             />)}
                         />
                         {/* <TextField id='address'             error={false} size='small'               variant='outlined' required={true}                     type='text'     label='Adresse'                   onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } helperText="Sur Dijon et alentours uniquement*" style={{ marginTop:'0.7em', marginBottom:'0.5em',width:'16em'}}/> */}
                         
-                        <StyledLink to={deliveryZoneRedirectState} style={{marginBottom:'1em'}}>
-                            <Typography variant="body2">
-                            *Consulter la zone de livraison éligible
-                            </Typography>
-                        </StyledLink>
+                            <StyledLink to={deliveryZoneRedirectState} style={{marginBottom:'1em'}}>
+                                <Typography variant="body2">
+                                *Consulter la zone de livraison éligible
+                                </Typography>
+                            </StyledLink>
                         
                         <div>
                             <Checkbox id='majority' color='primary' onChange={(event) => {this.updateFormValue(event.target.id, event.target.checked)} }/>
@@ -421,7 +444,7 @@ export default class Register extends React.Component {
                             </Snackbar>
 
                         {/* ACCOUNT CREATED SNACKBAR */}
-                        <Snackbar open={this.state.openAccountCreationOkAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseOpenAccountCreationOkAlert(event, reason)}>
+                        <Snackbar onAnimationStart={() => console.log('animation start')} open={this.state.openAccountCreationOkAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseOpenAccountCreationOkAlert(event, reason)}>
                             <MuiAlert onClose={(event, reason) => this.handleCloseOpenAccountCreationOkAlert(event, reason)} severity="success">
                             {this.state.form.firstname}, votre compte a été créé avec succès 👌🍻💥. Vous allez être redirigé...
                             </MuiAlert>
@@ -435,8 +458,8 @@ export default class Register extends React.Component {
                         </Snackbar>
 
                     </FormControl>
-                </div>
-            </Slide>
+                 </Slide>
+            </div>
         );
     }
 }

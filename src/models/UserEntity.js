@@ -6,6 +6,7 @@ export default class UserEntity {
     /**
      * 
      * @param {Number} idUser 
+     * @param {String} databaseToken
      * @param {String} email 
      * @param {String} password 
      * @param {Number} fkCart 
@@ -13,8 +14,9 @@ export default class UserEntity {
      * @param {Number} fkUserPersonalInformation 
      * @param {UserPersonalInformationsEntity} userPersonalInformationsByFkUserPersonalInformation 
      */
-    constructor(idUser, email, password, fkCart, cartByFkCart, fkUserPersonalInformation, userPersonalInformationsByFkUserPersonalInformation) {
+    constructor(idUser, databaseToken, email, password, fkCart, cartByFkCart, fkUserPersonalInformation, userPersonalInformationsByFkUserPersonalInformation) {
         this.idUser = idUser;
+        this.databaseToken = databaseToken
         this.email = email;
         this.password = password;
         this.fkCart = fkCart;
