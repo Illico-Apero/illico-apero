@@ -1,4 +1,5 @@
 import configuration from '../../config/configuration.json';
+import CartEntity from '../../models/CartEntity';
 import FormulaEntity from '../../models/FormulaEntity';
 import ProductEntity from '../../models/ProductEntity';
 import UserEntity from '../../models/UserEntity';
@@ -44,6 +45,19 @@ export default class CartService {
 
     getCart(userEntity, jwt, callback) {
         Http.get(configuration.server.baseUrl + configuration.endpoints.getCart + "/" + userEntity.idUser + "/" + userEntity.databaseToken, jwt, (data) => {
+            callback(data);
+        })
+    }
+
+    /**
+     * 
+     * @param {UserEntity} userEntity 
+     * @param {CartEntity} cartEntity 
+     * @param {String} jwt 
+     * @param {Function} callback 
+     */
+    saveCart(userEntity, cartEntity, jwt, callback) {
+        Http.postWithJwt(configuration.server.baseUrl + configuration.endpoints.saveCart + "/" + userEntity.idUser + "/" + userEntity.databaseToken, JSON.stringify(cartEntity), jwt, (data) => {
             callback(data);
         })
     }

@@ -93,7 +93,7 @@ export default class Home extends React.Component {
         });
     }
     retrieveQuantityInCart(callback) {
-        Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
+        Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
             this.cartService.getAmountIncart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */ (data) => {
                 if(data.status === ApiResponse.GET_SUCCESS()) { // if API returned amount in cart
                     this.setState({quantityInCart: data.response}, () => {
@@ -324,21 +324,16 @@ export default class Home extends React.Component {
             
 
                 {/* Snackbars and alerts */}
-
                 <Snackbar style={{marginBottom:'2.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
                     <MuiAlert onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)} severity="success">
                         {this.state.addedToCartMessage}
                     </MuiAlert>
                 </Snackbar>
-
                 <Snackbar style={{marginBottom:'2.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
                     <MuiAlert onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)} severity="success">
                         {this.state.addedToCartMessage}
                     </MuiAlert>
                 </Snackbar>
-
-
-                {/* TODO :  MAKE CART PAGE + PROCEED TO PAIEMENT */}
                 <Dialog onClose={() => this.handleCloseNotLoggedInDialog()} aria-labelledby="not-logged-in-dialog-title" open={this.state.isNotLoggedInDialogOpen}>
                     <DialogTitle id="not-logged-in-dialog-title">Vous devez être connecté(e) 😋 !</DialogTitle>
                         <List>
@@ -362,8 +357,6 @@ export default class Home extends React.Component {
                         </List>
                 </Dialog>
             </div>
-
-
         )
     }
 }

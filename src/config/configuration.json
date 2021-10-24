@@ -17,6 +17,7 @@
         "addProductToCart": "cart/add-product",
         "addFormulaToCart": "cart/add-formula",
         "getAmountInCart": "cart/amount-in-cart",
-        "getCart": "cart/get-cart"
+        "getCart": "cart/get-cart",
+        "saveCart":"cart/save-cart"
     }
 }

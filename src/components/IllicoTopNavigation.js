@@ -135,7 +135,7 @@ export default class IllicoTopNavigation extends React.Component {
                                     this.props.showLogo ?
                                         <IllicoLogo width={54} height={58}/>
                                         :
-                                        <Typography variant='h6' style= {{color:'white', fontFamily:'Tisa'}}>
+                                        <Typography variant='h5' style= {{color:'white', fontFamily:'Tisa', fontWeight:'bold'}}>
                                             {this.props.title}
                                         </Typography>
                                 }
@@ -143,8 +143,8 @@ export default class IllicoTopNavigation extends React.Component {
 
                             {
                                 this.props.isUserLoggedIn && this.props.userEntity !== null && this.state.loaded ? 
-                                    <Typography variant='body1' style={{color:'white'}}>
-                                        Salut {this.props.userEntity.userPersonalInformationsByFkUserPersonalInformation.firstname} !
+                                    <Typography variant='body1' style={{color:'white', fontFamily:'Tisa'}}>
+                                        Salut {this.props.userEntity.userPersonalInformationsByFkUserPersonalInformation.firstname} 🍻 !
                                     </Typography>
                                     :
                                     <div>
