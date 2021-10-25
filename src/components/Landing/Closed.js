@@ -15,8 +15,7 @@ export default class Closed extends React.Component {
                     marginRight:'auto',
 
                     width:'260px',
-                    textAlign:'left',
-                    fontFamily:'Tisa'
+                    textAlign:'left'
                 }}>
                 Nous sommes actuellement fermés 😪 {'\n'}
                 Vous pouvez tout de même consulter {'\n'}

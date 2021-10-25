@@ -8,6 +8,7 @@ import MuiAlert from '@material-ui/lab/Alert';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import { Avatar, Dialog, DialogTitle, List, ListItem, ListItemAvatar, ListItemText, Snackbar } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
 
 import UserEntity from '../models/UserEntity';
 import FormulaEntity from '../models/FormulaEntity';
@@ -31,11 +32,11 @@ import UserService from '../network/services/UserService';
 import IllicoTopNavigation from '../components/IllicoTopNavigation';
 import { Link } from 'react-router-dom';
 
+//TODO : Stock handling (Formula (home.js) & products (category.js))
 export default class Home extends React.Component {
-//TODO : expiration system for cookies, relog user automatically : has to be called from the App component
+
     constructor(props) {
         super(props);
-        
         this.state = {
             loaded: false,
             bottomNavigationValue: 1,
@@ -51,7 +52,12 @@ export default class Home extends React.Component {
             quantityInCart: 0,
             addedToCartAlert:false,
             addedToCartMessage:"Formule ajoutée au panier 🍻 !",
-            isNotLoggedInDialogOpen:false
+            isNotLoggedInDialogOpen:false,
+            isAddToCartErrorAlertOpen:false,
+            addToCartErrorAlertText:"Impossible d'ajouter au panier ❌. Contactez le support.",
+            isAddMoreThan9itemsWarningAlertOpen:false,
+            addMoreThan9itemsWarningAlert:"Impossible de dépasser la quantité autorisée (9 max)",
+            homeLoadingError:false
         }
 
         this.productService = new ProductService();
@@ -72,6 +78,7 @@ export default class Home extends React.Component {
                 this.setState({categories: data.response})
             }
             else if(data.status === ApiResponse.GET_ERROR()) {
+                this.setState({homeLoadingError:true});
                 console.error(data.response);
                 let userId = this.getUserIdIfLoggedInOtherwiseMinus1();
                 this.frontEndLogService.saveLog(userId, JSON.stringify(data.response));
@@ -86,43 +93,55 @@ export default class Home extends React.Component {
                 this.setState({formulas: data.response})
             }
             else if(data.status === ApiResponse.GET_ERROR()) {
+                this.setState({homeLoadingError:true});
                 console.error(data.response);
                 let userId = this.getUserIdIfLoggedInOtherwiseMinus1();
                 this.frontEndLogService.saveLog(userId, JSON.stringify(data.response));
             }
         });
     }
-    retrieveQuantityInCart(callback) {
+    retrieveQuantityInCart(callback) { //TODO : code redundancy
         Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
             this.cartService.getAmountIncart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */ (data) => {
                 if(data.status === ApiResponse.GET_SUCCESS()) { // if API returned amount in cart
                     this.setState({quantityInCart: data.response}, () => {
-                        callback();
+                        if(callback) callback();
                     })
                 }
                 else { // otherwise, keep going
-                    callback();
+                    if(callback) callback();
                 }
             })
         });
     }
-    handleCloseAddedToCartAlert(event, reason) {
+    handleCloseAddedToCartAlert(event, reason) { //TODO : redundant, pass bool to change as param
         if (reason === 'clickaway') {
             
             return;
         }
-        IllicoAudio.playTapAudio();
         this.setState({addedToCartAlert : false});
     }
-    handleCloseNotLoggedInDialog() {
+    handleCloseAddToCartErrorAlert(event, reason) { //TODO : redundant, pass bool to change as param
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({isAddToCartErrorAlertOpen : false});
+    }
+    handleCloseAddMoreThan9itemsWarningAlert(event, reason) { //TODO : redundant, pass bool to change as param
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({isAddMoreThan9itemsWarningAlertOpen : false});
+    }
+    handleCloseNotLoggedInDialog() {//TODO : redundant, pass bool to change as param
         this.setState({isNotLoggedInDialogOpen:false});
         IllicoAudio.playUiLockAudio();
     }
-    handleDialogSignInClick() {
-        IllicoAudio.playTapAudio();
+    handleDialogSignInClick() {//TODO : redundant, pass bool to change as param
+        IllicoAudio.playTapAudio(); //TODO : is it working ? test when not connected
     }
-    handleDialogSignUpClick() {
-        IllicoAudio.playTapAudio();
+    handleDialogSignUpClick() {//TODO : redundant, pass bool to change as param
+        IllicoAudio.playTapAudio(); //TODO : is it working ? test when not connected
     }
 
     addFormulaToCart(formula) {
@@ -133,21 +152,19 @@ export default class Home extends React.Component {
                     this.cartService.addFormulaToCart(formula, refreshedUserEntity.jwt, (data) => {
                         if(data.status === ApiResponse.GET_SUCCESS()) {
                             this.handleUiRefreshAfterFormulaSuccessfullyAddedToCart();
-                            //TODO : API SIDE + THERE : LIMIT 10 ITEMS OF THE SAME TYPE IN CART + DISPLAY A SNACKBAR IF TRY
-                            // TO UPDATE QTY > 10. SAME GOES FOR PRODUCTS (Category.js)
-                            // + HANDLE STOCK LATER ON.
+                        }
+                        else if(data.status === ApiResponse.GET_WARNING()) {
+                            this.setState({isAddMoreThan9itemsWarningAlertOpen:true});
                         }
                         else {
-                            //TODO
-                            //todo show error
-                            console.error("TODO : Handle error, something went wrong while adding to cart + savel og");
+                            this.setState({isAddToCartErrorAlertOpen:true});
+                            this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), data.response);
                         }
                     });
                 }
                 else {
-                    //TODO
-                    //todo show error // save this.state.userEntity
-                    console.error("TODO : Handle error, something went wrong while adding to cart + savel og");              
+                    this.setState({isAddToCartErrorAlertOpen:true});
+                    this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), this.state.userEntity);
                 }
             });
         }
@@ -155,21 +172,16 @@ export default class Home extends React.Component {
             this.setState({isNotLoggedInDialogOpen:true});
             IllicoAudio.playAlertAudio();
         }
-        console.log(formula);
     }
-
     handleUiRefreshAfterFormulaSuccessfullyAddedToCart() {
-        console.log("animation + cart icon notification + sound");
         this.setState({quantityInCart: this.state.quantityInCart + 1}); // no need to call the server for this, it's just local information anyways, that will be retrieved onLoad.
         this.setState({addedToCartAlert:true}, () => {
             IllicoAudio.playAddToCartAudio();
         });
     }
-
-    getUserIdIfLoggedInOtherwiseMinus1() {
+    getUserIdIfLoggedInOtherwiseMinus1() { //TODO : refactor, redundant
         return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
     }
-
     componentDidMount() {
         // many callbacks cause setstate is async. By doing this, we are sure that local storage user is well loaded before component gets rendered.
         this.setState({userEntity: JSON.parse(localStorage.getItem('userEntity'))}, () => {
@@ -184,7 +196,6 @@ export default class Home extends React.Component {
             });
         });
     }
-
     getCategoryRedirectState(category) {
         return  {
             pathname: '/category',
@@ -233,7 +244,7 @@ export default class Home extends React.Component {
                         { /************************** CATEGORIES **************************/}
 
                         <div id="categories">
-                            <Typography variant='h4' gutterBottom style= {{ paddingTop:'0.3em', color:'#b26a00', fontFamily:'Tisa', marginBottom:'1em'}}>
+                            <Typography variant='h4' gutterBottom style= {{ paddingTop:'0.3em', color:'#b26a00', marginBottom:'1em'}}>
                                 NOS CATÉGORIES {' '}
                             <img src={yellow_circle} alt='yellow geometric circles' style={{
                                 height:'0.7em'
@@ -259,7 +270,12 @@ export default class Home extends React.Component {
                                 </Grid>
                                 : 
                                 <div>
-                                    <CircularProgress/>
+                                    <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                        Une erreur est survenue,
+                                        impossible de contacter le serveur pour charger la page.
+                                        Veuillez réessayer plus tard
+                                        ou informer le support.
+                                    </Alert> 
                                 </div>
                             }
                         </div>
@@ -272,7 +288,7 @@ export default class Home extends React.Component {
                         { /************************** FORMULAS **************************/}
 
                         <div id="formules">
-                            <Typography variant='h4' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', marginBottom:'1em'}}>
+                            <Typography variant='h4' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', marginBottom:'1em'}}>
                                 NOS FORMULES {' '}
                                 <img src={blue_bubble} alt='blue geometric circle' style={{
                                 height:'0.7em'
@@ -324,14 +340,19 @@ export default class Home extends React.Component {
             
 
                 {/* Snackbars and alerts */}
-                <Snackbar style={{marginBottom:'2.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
                     <MuiAlert onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)} severity="success">
                         {this.state.addedToCartMessage}
                     </MuiAlert>
                 </Snackbar>
-                <Snackbar style={{marginBottom:'2.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
-                    <MuiAlert onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)} severity="success">
-                        {this.state.addedToCartMessage}
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isAddToCartErrorAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)}>
+                    <MuiAlert onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)} severity="error">
+                        {this.state.addToCartErrorAlertText}
+                    </MuiAlert>
+                </Snackbar>
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isAddMoreThan9itemsWarningAlertOpen} autoHideDuration={3000} onClose={(event, reason) => this.handleCloseAddMoreThan9itemsWarningAlert(event, reason)}>
+                    <MuiAlert onClose={(event, reason) => this.handleCloseAddMoreThan9itemsWarningAlert(event, reason)} severity="warning">
+                        {this.state.addMoreThan9itemsWarningAlert}
                     </MuiAlert>
                 </Snackbar>
                 <Dialog onClose={() => this.handleCloseNotLoggedInDialog()} aria-labelledby="not-logged-in-dialog-title" open={this.state.isNotLoggedInDialogOpen}>

@@ -67,7 +67,7 @@ export default class Utils {
             if(apiResponse.status === ApiResponse.GET_SUCCESS()) {
                 userEntity.jwt = apiResponse.response;
                 localStorage.setItem('userEntity', JSON.stringify(userEntity))
-                console.warn("JWT was refreshed");
+                console.info("JWT was refreshed");
                 callback(userEntity);
             }
             else {

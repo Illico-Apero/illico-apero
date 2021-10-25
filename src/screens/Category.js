@@ -19,7 +19,10 @@ import IllicoBottomNavigation from '../components/IllicoBottomNavigation';
 import IllicoAudio from '../utils/IllicoAudio';
 import CartService from '../network/services/CartService';
 import { Link } from 'react-router-dom';
+import FrontEndLogService from '../network/services/FrontEndLogService';
+import { Alert } from '@material-ui/lab';
 
+//TODO : Stock handling (Formula (home.js) & products (category.js))
 /**
  * @param {String} category : the products category page
  */
@@ -39,10 +42,16 @@ export default class Category extends React.Component {
             quantityInCart: 0,
             addedToCartAlert:false,
             addedToCartMessage:"C'est ajouté au panier 🍻 !",
-            isNotLoggedInDialogOpen:false
+            isNotLoggedInDialogOpen:false,
+            isAddMoreThan9itemsWarningAlertOpen:false,
+            addMoreThan9itemsWarningAlert:"Impossible de dépasser la quantité autorisée (9 max)",
+            isAddToCartErrorAlertOpen:false,
+            addToCartErrorAlertText:"Impossible d'ajouter au panier ❌. Contactez le support.",
+            categoryLoadingError:false
         }
 
         this.productService = new ProductService();
+        this.frontEndLogService = new FrontEndLogService();
         this.cartService = new CartService();
         this.initializeProducts();
     }
@@ -53,6 +62,7 @@ export default class Category extends React.Component {
                 this.setState({products: data.response})
             }
             else {
+                this.setState({categoryLoadingError:true})
                 console.error(data.response);
                 let userId = this.getUserIdIfLoggedInOtherwiseMinus1();
                 this.frontEndLogService.saveLog(userId, JSON.stringify(data.response));
@@ -73,24 +83,34 @@ export default class Category extends React.Component {
             })
         });
     }
-    handleCloseAddedToCartAlert(event, reason) {
+    handleCloseAddedToCartAlert(event, reason) { //TODO : redundant, pass bool to change as param
         if (reason === 'clickaway') {
             
             return;
         }
-        IllicoAudio.playTapAudio();
         this.setState({addedToCartAlert : false});
     }
-    handleCloseNotLoggedInDialog() {
+    handleCloseAddMoreThan9itemsWarningAlert(event, reason) { //TODO : redundant, pass bool to change as param
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({isAddMoreThan9itemsWarningAlertOpen : false});
+    }
+    handleCloseAddToCartErrorAlert(event, reason) { //TODO : redundant, pass bool to change as param
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({isAddToCartErrorAlertOpen : false});
+    }
+    handleCloseNotLoggedInDialog() {  //TODO : redundant, pass bool to change as param
         this.setState({isNotLoggedInDialogOpen:false});
         IllicoAudio.playUiLockAudio();
-
     }
     handleDialogSignInClick() {
-        IllicoAudio.playTapAudio();
+        IllicoAudio.playTapAudio(); //TODO : is it working ? test when not connected
     }
     handleDialogSignUpClick() {
-        IllicoAudio.playTapAudio();
+        IllicoAudio.playTapAudio(); //TODO : is it working ? test when not connected
     }
     getUserIdIfLoggedInOtherwiseMinus1() {
         return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
@@ -116,10 +136,7 @@ export default class Category extends React.Component {
         }
     }
 
-    // TODO : BOTH FOR HOME AND CATEGORY/JS :
-    // - handle errors with Alert + ask user to contact us + save on front end log table
-    // - handle log in popin
-    // - handle UI change when everything OK : -> little animation on the dot appearing on the cart. See Material Ui API (badge API i guess)
+    // TODO : BOTH FOR HOME AND CATEGORY/JS : REFACTOR / INHERIT FROM GENERIC COMPONENT and pass param 
     addProductToCart(product) {
         if(this.state.isUserLoggedIn) {
             Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
@@ -129,17 +146,18 @@ export default class Category extends React.Component {
                         if(data.status === ApiResponse.GET_SUCCESS()) {
                             this.handleUiRefreshAfterProductSuccessfullyAddedToCart();
                         }
+                        else if(data.status === ApiResponse.GET_WARNING()) {
+                            this.setState({isAddMoreThan9itemsWarningAlertOpen:true});
+                        }
                         else {
-                            //TODO
-                            //todo show error
-                            console.error("TODO  ERR1: Handle error, something went wrong while adding to cart + savel og");
+                            this.setState({isAddToCartErrorAlertOpen:true});
+                            this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), data.response);
                         }
                     });
                 }
                 else {
-                    //TODO
-                    //todo show error
-                    console.error("TODO ERR2 : Handle error, something went wrong while adding to cart + savel og");
+                    this.setState({isAddToCartErrorAlertOpen:true});
+                    this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), this.state.userEntity);
                 }
             });
         }
@@ -147,11 +165,9 @@ export default class Category extends React.Component {
             this.setState({isNotLoggedInDialogOpen:true});
             IllicoAudio.playAlertAudio();
         }
-        console.log(product);
     }
 
     handleUiRefreshAfterProductSuccessfullyAddedToCart() {
-        console.log("animation + cart icon notification + sound");
         this.setState({quantityInCart: this.state.quantityInCart + 1}); // no need to call the server for this, it's just local information anyways, that will be retrieved onLoad.
         this.setState({addedToCartAlert:true}, () => {
             IllicoAudio.playAddToCartAudio();
@@ -176,6 +192,18 @@ export default class Category extends React.Component {
                 slideDirection:'left',
                 category:this.state.category
             }
+        }
+        if(this.state.categoryLoadingError) {
+            return(
+                <div>
+                <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                    Une erreur est survenue,
+                    impossible de contacter le serveur pour charger la page.
+                    Veuillez réessayer plus tard
+                    ou informer le support.
+                </Alert> 
+                </div>
+            )
         }
         return (
             <div>
@@ -203,9 +231,19 @@ export default class Category extends React.Component {
                     </div>
                 </Fade>
                 <IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart}/>
-                <Snackbar style={{marginBottom:'2.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.addedToCartAlert} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)}>
                     <MuiAlert onClose={(event, reason) => this.handleCloseAddedToCartAlert(event, reason)} severity="success">
                         {this.state.addedToCartMessage}
+                    </MuiAlert>
+                </Snackbar>
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isAddToCartErrorAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)}>
+                    <MuiAlert onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)} severity="error">
+                        {this.state.addToCartErrorAlertText}
+                    </MuiAlert>
+                </Snackbar>
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isAddMoreThan9itemsWarningAlertOpen} autoHideDuration={3000} onClose={(event, reason) => this.handleCloseAddMoreThan9itemsWarningAlert(event, reason)}>
+                    <MuiAlert onClose={(event, reason) => this.handleCloseAddMoreThan9itemsWarningAlert(event, reason)} severity="warning">
+                        {this.state.addMoreThan9itemsWarningAlert}
                     </MuiAlert>
                 </Snackbar>
 

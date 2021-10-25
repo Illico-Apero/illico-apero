@@ -18,7 +18,7 @@ class IllicoChip extends React.Component
         return(
             <NoDecorationLink to={this.props.to}>
                 <Chip label={this.props.text} color={this.props.color} clickable style={{marginBottom:'0.4em', 
-                fontWeight:'bold', color:'#ffffff', fontFamily:'Tisa'}}
+                fontWeight:'bold', color:'#ffffff'}}
                 />
             </NoDecorationLink>
         );

@@ -17,6 +17,7 @@ import About from './screens/About';
 import Category from './screens/Category';
 import Profile from './screens/Profile';
 import Cart from './screens/Cart';
+import Checkout from './screens/Checkout';
 import UserService from './network/services/UserService';
 import ApiResponse from './models/api/ApiResponse';
 
@@ -39,6 +40,7 @@ function App() {
                         <Route path='/contact' component={Contact} />
                         <Route path='/about' component={About} />
                         <Route path='/category' component={Category} />
+                        <Route path='/checkout' component={Checkout} />
                     </Switch>
                 </div>
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Alert } from '@material-ui/lab';
-import { CircularProgress, Dialog, DialogActions, DialogContentText, DialogTitle, Snackbar, Typography } from '@material-ui/core';
+import { CircularProgress, Dialog, DialogActions, Button, DialogTitle, Snackbar, Typography, Card } from '@material-ui/core';
 import MuiAlert from '@material-ui/lab/Alert';
 
 import FrontEndLogService from '../network/services/FrontEndLogService';
@@ -19,8 +19,8 @@ import Utils from '../utils/Utils';
 import IllicoAskForConnection from '../components/IllicoAskForConnection';
 import IllicoBottomNavigation from '../components/IllicoBottomNavigation';
 import IllicoTopNavigation from '../components/IllicoTopNavigation';
-import { Button } from 'bootstrap';
 import RemovalInformations from '../models/RemovalInformations';
+import NoDecorationLink from '../components/Generic/NoDecorationLinkClass';
 
 
 export default class Cart extends React.Component {
@@ -29,6 +29,7 @@ export default class Cart extends React.Component {
         super(props);
         this.state = {
             loaded: false,
+            quantityInCart:0,
             bottomNavigationValue: 2,
             isUserLoggedIn: false,
             /** @type {UserEntity} userEntity */
@@ -36,8 +37,10 @@ export default class Cart extends React.Component {
             /** @type {CartEntity} cartEntity*/
             cartEntity:null,
             cartLoadingError:false,
-            quantityUpdated:false,
+            isQuantityUpdatedAlertOpen:false,
             quantityUpdatedText:'Panier mis à jour 🍻✅ !',
+            isQuantityUpdatedErrorAlertOpen:false,
+            quantityUpdateErrorText:'Impossible de sauvegarder la quantité ❌. Contactez le support.',
             isRemoveItemDialogOpen:false,
             /** @type {RemovalInformations} removalInformations */
             removalInformations:null
@@ -54,25 +57,27 @@ export default class Cart extends React.Component {
             this.cartService.getAmountIncart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */ (data) => {
                 if(data.status === ApiResponse.GET_SUCCESS()) { // if API returned amount in cart
                     this.setState({quantityInCart: data.response}, () => {
-                        callback();
+                        if(callback) callback();
                     })
                 }
                 else { // otherwise, keep going
-                    callback();
+                    if(callback) callback();
                 }
             })
         });
     }
 
     retrieveCart() {
-        this.cartService.getCart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */ (data) => {
-            if(data.status === ApiResponse.GET_SUCCESS()) {
-                this.setState({cartEntity:data.response});
-            }
-            else {
-                this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), data);
-                this.setState({cartLoadingError:true});
-            }
+        Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
+            this.cartService.getCart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */ (data) => {
+                if(data.status === ApiResponse.GET_SUCCESS()) {
+                    this.setState({cartEntity:data.response});
+                }
+                else {
+                    this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), data);
+                    this.setState({cartLoadingError:true});
+                }
+            });
         });
     }
 
@@ -99,16 +104,21 @@ export default class Cart extends React.Component {
         }
     }
 
-
-    /** @param {CartFormulasEntity} cartFormula */
     onQuantityChange(event, item, itemIndex, isItemCartFormula) {
-        let newQty = event.target.value;
+        let newQty;
+        if(event) {
+            newQty = event.target.value;
+        }
+        else {
+            newQty = 0;
+        }
         if(newQty === 0) {
             let currentRemovalInformations = new RemovalInformations(this.state.cartEntity, itemIndex, isItemCartFormula);
-            this.setState({removalInformations: currentRemovalInformations});
-            // this will show the cancel/remove item dialog. If dialog is "accepted",
-            // the handleRemoveFromCartAccept() is called, and will use the removalInformations.
-            this.setState({isRemoveItemDialogOpen: true}); 
+            this.setState({removalInformations: currentRemovalInformations}, () => {
+                // this will show the cancel/remove item dialog. If dialog is "accepted",
+                // the handleRemoveFromCartAccept() is called, and will use the removalInformations.
+                this.setState({isRemoveItemDialogOpen: true}); 
+            })
         }
         else if(newQty > 0 && newQty < 11) {
             let cart = this.state.cartEntity;
@@ -118,61 +128,81 @@ export default class Cart extends React.Component {
             else {
                 cart.cartProductsByIdCart[itemIndex].quantity = newQty;
             }
-            this.updateCartQuantity(cart)
+            this.saveCartAndUpdatePrice(cart)
         }
         else {
-            //TODO do not update anything + show error ❌ snack.
-            // leave qty of card to oldQuantity
+            IllicoAudio.playAlertAudio();
+            this.setState({isQuantityUpdatedErrorAlertOpen:true});
+            this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), "Tried to update cart with invalid quantity");
         }
     }
 
+    /**
+     * 
+     * @param {CartEntity} cart 
+     */
     saveCartAndUpdatePrice(cart) {
         Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
             this.cartService.saveCart(this.state.userEntity, cart, this.state.userEntity.jwt, (data) => {
                 if(data.status === ApiResponse.GET_SUCCESS()) {
-                    this.setState({cartPrice:4});
-                    console.log("cart $$$ :")
-                    console.log(data.response);
                     cart.totalPrice = data.response;
-                    this.setState({cartEntity:cart});
-                    this.setState({quantityUpdated:true});
-                    IllicoAudio.playTapAudio();
+                    this.setState({cartEntity:cart}, () => {
+                        this.retrieveQuantityInCart(()=>{});
+                        console.log(this.state.cartEntity)
+                    });
+                    this.setState({isQuantityUpdatedAlertOpen:true});
                 }
                 else {
-                    // TODO show error snack
+                    IllicoAudio.playAlertAudio();
+                    this.setState({isQuantityUpdatedErrorAlertOpen:true});
+                    this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), data.response);
                 }
             });
         });
     }
 
-    //TODO : 1) End quantity update (snacks + bin to remove + update price (do not duplicate code)) 
-    //       2) Add total price + checkout box
-    //       3) develop checkout page + start stripe payment 
+    //TODO Add cart recap (price) + delete bin + develop checkout page + start stripe payment 
 
-    //TODO : refactor, redundant
-    getUserIdIfLoggedInOtherwiseMinus1() {
+    
+    getUserIdIfLoggedInOtherwiseMinus1() { //TODO : refactor, redundant
         return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
     }
-    handleCloseQuantityUpdatedAlert(event, reason) {
+    handleCloseQuantityUpdatedAlert(event, reason) { //TODO : refactor, redundant
         if (reason === 'clickaway') {
-            
             return;
         }
-        IllicoAudio.playTapAudio();
-        this.setState({quantityUpdated : false});
+        this.setState({isQuantityUpdatedAlertOpen:false});
     }
-    handleCloseRemoveItemDialog() {
+    handleCloseQuantityUpdateErrorAlert(event, reason) { //TODO : refactor, redundant
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({isQuantityUpdatedErrorAlertOpen:false});
+    }
+    handleCloseRemoveItemDialog(even, reason) { //TODO : refactor, redundant
+        if (reason === 'clickaway') {
+            return;
+        }
         this.setState({isRemoveItemDialogOpen:false});
         IllicoAudio.playUiLockAudio();
     }
     handleRemoveFromCartAccept() {
-        //todo : remove selected item from cart + show alert dialog
-        IllicoAudio.playTapAudio();
+        this.setState({isRemoveItemDialogOpen:false});
+        let cart = this.state.cartEntity;
+        let removalInformations = this.state.removalInformations;
+        if(removalInformations.isItemCartFormula) {
+            delete this.state.cartEntity.cartFormulasByIdCart[removalInformations.itemIndex];
+        }
+        else {
+            delete this.state.cartEntity.cartProductsByIdCart[removalInformations.itemIndex];
+        }
+        this.saveCartAndUpdatePrice(cart)
+        IllicoAudio.playUiLockAudio();
     }
     handleRemoveFromCartCancel() {
-
-    }
-
+        this.setState({isRemoveItemDialogOpen : false});
+        IllicoAudio.playUiLockAudio();
+    }    
 
     render() {
         const loginRedirectState = {
@@ -182,36 +212,76 @@ export default class Cart extends React.Component {
                 slideDirection:'left',
             }
         }
-
-
-        //TODO : Dropown management, Qty management server side, No more than 10 server side, No more than 10 Home/Category,
-        //       Typography should be better (Formules, produits, card title), bin to remove item, checkout at first line with total price indicated
+        const checkoutRedirectState = {
+            pathname:'/checkout',
+            state: {
+                backUrl:'/cart',
+                slideDirection:'left'
+            }
+        }
+        const checkoutRootStyle = {
+            display:'flex',
+            width:200,
+            marginRight:'auto',
+            marginLeft:'auto',
+            marginBottom:'2em',
+            padding:'1em',
+            textAlign:'left'
+        }
         return (
             <>
                 <IllicoTopNavigation title='Panier' backUrl='/profile' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
                 {
-                    
                     this.state.isUserLoggedIn ?
                     <div id='cart'> {
-                            this.state.cartLoadingError ?
-                            <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left', fontFamily:'Tisa'}}>
-                                Une erreur est survenue,
-                                impossible de charger votre panier.
-                                Veuillez informer le support.
-                            </Alert> 
-                            : 
-                            ''
+                        this.state.cartLoadingError ?
+                        <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                            Une erreur est survenue,
+                            impossible de charger votre panier.
+                            Veuillez réessayer plus tard
+                            ou informer le support.
+                        </Alert> 
+                        : 
+                        ''
                         }{
-                            this.state.cartEntity !== null ?
-                            <div style={{marginBottom:'5em'}}> {
-                                this.state.cartEntity.cartFormulasByIdCart.length === 0 && this.state.cartEntity.cartProductsByIdCart.length === 0 ?
-                                <MuiAlert severity='info'>Votre panier est vide 😭 !</MuiAlert>
-                                :
+                        this.state.cartEntity !== null ?
+                        <div style={{marginBottom:'5em'}}> {
+                            (this.state.cartEntity.cartFormulasByIdCart.length === 0 && this.state.cartEntity.cartProductsByIdCart.length === 0) ||
+                            (this.state.cartEntity.cartFormulasByIdCart.every(item => !item) && this.state.cartEntity.cartProductsByIdCart.every(item => !item)) ?
+                            <Alert severity="info" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                Votre panier est vide 😭 !
+                            </Alert> 
+                            :
+                            <div id="cart">
+
+                                <div id="checkout" style={{marginTop:'2em', marginBottom:'1em'}}>
+                                    <Card elevation={3} style={checkoutRootStyle}>
+                                    <div style={{paddingRight:'0.5em', marginTop:'10px'}}>
+                                        <Typography>
+                                        Total
+                                        </Typography>
+                                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
+                                            {this.state.cartEntity.totalPrice + '€'}
+                                        </Typography>
+                                    </div>
+                                    <div style={{marginLeft:'1em'}}>
+                                        <NoDecorationLink to={checkoutRedirectState}>
+                                            <Button onClick={() => IllicoAudio.playTapAudio()} variant='contained' color='primary' style={{fontWeight:'bold'}}>
+                                                Livraison et paiement
+                                            </Button>
+                                        </NoDecorationLink>
+                                    </div>
+                                    </Card>
+ 
+                                </div>
+
+
                                 <div id='formulas'> {
                                     this.state.cartEntity.cartFormulasByIdCart !== null &&
-                                    this.state.cartEntity.cartFormulasByIdCart.length > 0 ?
+                                    this.state.cartEntity.cartFormulasByIdCart.length > 0 &&
+                                    !this.state.cartEntity.cartFormulasByIdCart.every(item => !item)?
                                     <>
-                                        <Typography variant='h5' style={{marginTop:'1em', fontFamily:'Tisa', marginBottom:'0.5em', color:'#b26a00'}}>
+                                        <Typography variant='h5' style={{marginTop:'1em', marginBottom:'0.5em', color:'#b26a00'}}>
                                             Vos formules {' '}
                                             <img src={yellow_circle} alt='yellow geometric circles' style={{height:'0.7em'}}/>
                                         </Typography> {
@@ -224,7 +294,6 @@ export default class Cart extends React.Component {
                                                     item={cartFormula}
                                                     index={index}
                                                     key={index}
-                                                    
                                                 />
                                             ))
                                         }
@@ -232,13 +301,14 @@ export default class Cart extends React.Component {
                                     : 
                                     ''
                                 }
-                                {''}
+                                </div>
                                 
                                 <div id='products'> {
                                     this.state.cartEntity.cartProductsByIdCart !== null &&
-                                    this.state.cartEntity.cartProductsByIdCart.length > 0 ?
+                                    this.state.cartEntity.cartProductsByIdCart.length > 0 &&
+                                    !this.state.cartEntity.cartProductsByIdCart.every(item => !item) ?
                                     <>
-                                        <Typography variant='h5' style={{marginTop:'2em', fontFamily:'Tisa', marginBottom:'0.5em', color:'#b26a00'}}>
+                                        <Typography variant='h5' style={{marginTop:'2em',marginBottom:'0.5em', color:'#b26a00'}}>
                                             Vos produits {' '}
                                             <img src={blue_bubble} alt='blue geometric circle' style={{height:'0.7em'}}/>
                                         </Typography> {
@@ -273,18 +343,24 @@ export default class Cart extends React.Component {
                 <IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart}/>
             
                 <div id='dialogs'>
-                    <Snackbar style={{marginBottom:'3.5em'}} open={this.state.quantityUpdated} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)}>
+                    <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)}>
                         <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)} severity="success">
                             {this.state.quantityUpdatedText}
                         </MuiAlert>
                     </Snackbar>
 
+                    <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedErrorAlertOpen} autoHideDuration={5000} onClose={(event, reason) => this.handleCloseQuantityUpdateErrorAlert(event, reason)}>
+                        <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdateErrorAlert(event, reason)} severity="error">
+                            {this.state.quantityUpdateErrorText}
+                        </MuiAlert>
+                    </Snackbar>
 
-                    <Dialog onClose={() => this.handleCloseRemoveItemDialog()} aria-labelledby="delete-cart-item-title" open={this.state.isRemoveItemDialogOpen}>
+
+                    <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="delete-cart-item-title" open={this.state.isRemoveItemDialogOpen}>
                         <DialogTitle id="delete-cart-item-title">Supprimer l'article du panier ?</DialogTitle>
                         <DialogActions>
-                            <Button onClick={() => this.handleRemoveFromCartCancel()} color="primary"> Annuler </Button>
-                            <Button onClick={() => this.handleRemoveFromCartAccept()} color="primary" autoFocus> Supprimer </Button>
+                            <Button variant='contained' color='primary' onClick={() => this.handleRemoveFromCartCancel()}> Annuler </Button>
+                            <Button variant='contained' color='secondary' onClick={() => this.handleRemoveFromCartAccept()} autoFocus> Supprimer </Button>
                         </DialogActions>
                     </Dialog>
                 </div>

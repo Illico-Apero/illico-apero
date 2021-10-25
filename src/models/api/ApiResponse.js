@@ -16,4 +16,7 @@ export default class ApiResponse {
     static GET_ERROR() {
         return 'ERROR';
     }
+    static GET_WARNING() {
+        return 'WARNING';
+    }
 }

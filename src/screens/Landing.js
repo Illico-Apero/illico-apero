@@ -66,15 +66,14 @@ export default class Landing extends React.Component {
                 <Typography variant='h3' gutterBottom
                     style= {{
                         paddingTop:'0.1em',
-                        color:'#b26a00',
-                        fontFamily:'Tisa'
+                        color:'#b26a00'
                     }}>
                     Bienvenue !
                 </Typography>
                 <Slide  direction='right' in={this.state.loaded} mountOnEnter unmountOnExit timeout={800}>
                     <IllicoLogo style={{marginBottom:'0.4em'}}/>
                 </Slide>
-                <Typography variant='subtitle1' style={{whiteSpace: 'pre-line', fontFamily:'Tisa'}}>
+                <Typography variant='subtitle1' style={{whiteSpace: 'pre-line'}}>
                         Notre mission ?{'\n'}
                         Vous livrer de l'alcool sur l'agglomération de Dijon,{'\n'}
                         entre <b>{hours[0]} et {hours[1]}</b> du <b>{days[0]} au {days[1]}</b>
@@ -103,8 +102,6 @@ export default class Landing extends React.Component {
                         </div>
                     </div>
                 }
-
-                
                 {/* TODO Router, Links to different pages */}
             </div>
         );

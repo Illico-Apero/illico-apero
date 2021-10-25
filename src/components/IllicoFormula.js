@@ -41,13 +41,13 @@ class IllicoFormula extends React.Component
                         }}
                     />
                     <CardContent>
-                        <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontWeight:'Bold', textAlign:'left'}}>
+                        <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontWeight:'Bold', textAlign:'left'}}>
                             {this.props.title}
                         </Typography>
-                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.9em', textAlign:'left'}}>
+                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.9em', textAlign:'left'}}>
                             {this.props.description}
                         </Typography>
-                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.8em', textAlign:'left'}}>
+                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.8em', textAlign:'left'}}>
                             {this.props.price + ' €'}
                         </Typography>
                     </CardContent>

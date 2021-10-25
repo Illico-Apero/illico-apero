@@ -15,8 +15,7 @@ export default class Opened extends React.Component {
                     marginRight:'auto',
 
                     width:'320px',
-                    textAlign:'left',
-                    fontFamily:'Tisa'
+                    textAlign:'left'
                 }}>
                 Nous sommes actuellement ouvert ! 🍻🎉
             </Alert>

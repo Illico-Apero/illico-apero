@@ -38,13 +38,13 @@ export default class IllicoAskForConnection extends React.Component {
                 <div style={{marginBottom:'4em'}}>
                     <Slide direction='left' in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
                         <div>
-                            <Typography variant='h4' gutterBottom style= {{ paddingTop:'0.4em', color:'#b26a00', fontFamily:'Tisa', marginBottom:'0.7em'}}>
+                            <Typography variant='h4' gutterBottom style= {{ paddingTop:'0.4em', color:'#b26a00', marginBottom:'0.7em'}}>
                                 Vous n'êtes pas connecté(e) 😋
                             </Typography>
                             <div onClick={() => IllicoAudio.playTapAudio()}>
                             <StyledLink to={this.props.loginRedirectState}>Déjà inscrit ?</StyledLink>
                             </div>
-                            <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'1.5em', color:'#b26a00', fontFamily:'Tisa', marginBottom:'1em'}}>
+                            <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'1.5em', color:'#b26a00', marginBottom:'1em'}}>
                                 Vous pouvez également créer un compte avec le formulaire ci-dessous :
                             </Typography>
                         </div>

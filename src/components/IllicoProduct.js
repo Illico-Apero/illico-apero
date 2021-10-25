@@ -76,13 +76,13 @@ class IllicoProduct extends React.Component
                         this.state.imageLoaded ? '' : <CircularProgress/>
                     }
                     <CardContent>
-                    <Typography variant='subtitle1' style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontWeight:'Bold', textAlign:'left'}}>
+                    <Typography variant='subtitle1' style= {{ paddingTop:'0.1em', color:'#b26a00',fontWeight:'Bold', textAlign:'left'}}>
                         {product.name}
                     </Typography>
                     {/* TYPE */}
                     {
                         product.type !== null ?
-                        <Typography variant='subtitle2' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontWeight:'Bold', textAlign:'left'}}>
+                        <Typography variant='subtitle2' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontWeight:'Bold', textAlign:'left'}}>
                             {product.type}
                         </Typography>
                         :
@@ -91,7 +91,7 @@ class IllicoProduct extends React.Component
                     {/* ORIGINE */}
                     {
                         product.origin !== null ?
-                        <Typography variant='subtitle2' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', textAlign:'left'}}>
+                        <Typography variant='subtitle2' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', textAlign:'left'}}>
                             {product.origin}
                         </Typography>
                         :
@@ -108,7 +108,7 @@ class IllicoProduct extends React.Component
                                         <CloseIcon fontSize='inherit'/>
                                     </IconButton>
                                 }>
-                                <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.9em', textAlign:'left'}}>
+                                <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.9em', textAlign:'left'}}>
                                     {product.description}
                                 </Typography>
                                 </Alert>
@@ -124,7 +124,7 @@ class IllicoProduct extends React.Component
 
 
 
-                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontFamily:'Tisa', fontSize:'0.8em', textAlign:'left'}}>
+                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.8em', textAlign:'left'}}>
                         {product.price + ' €'}
                     </Typography>
                     </CardContent>

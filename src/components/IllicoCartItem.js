@@ -1,10 +1,11 @@
 import React from 'react'
 import Slide from '@material-ui/core/Slide';
-import { Card, CardContent, CardMedia, FormControl, InputLabel, MenuItem, Select, Typography } from '@material-ui/core';
+import { Card, CardContent, CardMedia, FormControl, IconButton, InputLabel, MenuItem, Select, Typography } from '@material-ui/core';
 import Utils from '../utils/Utils';
 import CartEntity from '../models/CartEntity';
 import ApiResponse from '../models/api/ApiResponse';
 import CartService from '../network/services/CartService';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 
 /**
@@ -17,7 +18,6 @@ export default class IllicoCartItem extends React.Component {
 
     constructor(props) {
         super(props);
-
         let alt = '';
         let itemName = '';
         let imagePath = '';
@@ -77,11 +77,9 @@ export default class IllicoCartItem extends React.Component {
             flexDirection:'column',
             textAlign:'left',
             position:'relative',
-            fontFamily:'Tisa'
+            width:220
         }
-        const cardContentStyle = {
-            flex: '1 0 auto'
-        }
+
         const cardImageStyle = {
             width:200,
             aspectRatio:1/1,
@@ -97,39 +95,38 @@ export default class IllicoCartItem extends React.Component {
                     style={cardImageStyle}
                 />
                 <CardContent style={cardDetailsStyle}>
-                    <div>
-                        
-                    </div>
-
-                    <Typography variant='body1' gutterBottom style= {{ color:'#b26a00'}}>
+                    <Typography variant='body1' style= {{ color:'#b26a00'}}>
                     {this.state.itemName}
-                    </Typography>                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em'}}>
+                    </Typography>                    
+                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
                         {this.state.price + '€'}
                     </Typography>
                         
-
-                    <div style={{position:'absolute', bottom:5}}>
-                        <div>
-                            <FormControl variant='outlined' size='small'>
-                                <InputLabel>Qté</InputLabel>
-                                <Select 
-                                    label='Quantité'
-                                    labelId={`${this.state.itemName}-label`}
-                                    id={`${this.state.itemId}`}
-                                    value={this.props.item.quantity}
-                                    onChange={(event) => this.props.onQuantityChange(event, this.state.item, 
-                                    this.state.index, this.state.isCartFormula)}
-                                >
-                                {/* //TODO : REPLACE MAX QTY (10) WITH CONSTANT */}
-                                {[...Array(this.state.MAX_QUANTITY_VALUE)].map((x, i) => 
-                                        <MenuItem key={i} value={i} style={{
-                                            paddingTop:'2px', minHeight:0, width:'60px'
-                                        }}>{i}</MenuItem>
-                                    )}
-                                </Select>
-                            </FormControl>
-                            {/**  //TODO  bin icon delete */}
-                        </div>
+                    <div style={{position:'absolute', bottom:5, flexDirection:'row'}}>
+                        <FormControl variant='outlined' size='small'>
+                            <InputLabel>Qté</InputLabel>
+                            <Select 
+                                label='Quantité'
+                                labelId={`${this.state.itemName}-label`}
+                                id={`${this.state.itemId}`}
+                                value={this.props.item.quantity}
+                                onChange={(event) => this.props.onQuantityChange(event, this.state.item, 
+                                this.state.index, this.state.isCartFormula)}
+                            >
+                            {[...Array(this.state.MAX_QUANTITY_VALUE)].map((x, i) => 
+                                    <MenuItem key={i} value={i} style={{
+                                        paddingTop:'2px', minHeight:0, width:'60px'
+                                    }}>{i}</MenuItem>
+                                )}
+                            </Select>
+                        </FormControl>
+                        <span style={{marginLeft:'1em'}}>
+                            <IconButton color='primary' aria-label='Suppr.' onClick={() => this.props.onQuantityChange(
+                                null, this.state.item, this.state.index, this.state.isCartFormula)}
+                            >
+                                <DeleteIcon/>
+                            </IconButton>
+                            </span>
                     </div>
                 </CardContent>
             </Card>
