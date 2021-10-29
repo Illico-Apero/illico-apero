@@ -55,7 +55,7 @@ export default class FormValidator {
      * @param {String} phone 
      */
     static isPhoneValid(phone) {
-        return phone.startsWith("0") && phone.length === 10;
+        return phone.startsWith("0") && phone.length === 10 && /^\d+$/.test(phone) ;
     }
 
 

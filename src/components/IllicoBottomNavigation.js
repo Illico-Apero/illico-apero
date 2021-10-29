@@ -38,7 +38,7 @@ class IllicoBottomNavigation extends React.Component
     render()
     {
         return(
-            <Paper style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
+            <Paper style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex:5 }} elevation={3}>
                 <BottomNavigation showLabels value={this.state.bottomNavigationValue} onChange={(e, newValue) => this.setState({bottomNavigationValue: newValue})}>
                     <BottomNavigationAction label="Profil" icon={<Person/>} component={NoDecorationLinkClass} to='/profile' onClick={() => IllicoAudio.playNavigationForwardAudio()}/>
                     <BottomNavigationAction label="Catalogue" icon={<HomeIcon/>} component={NoDecorationLinkClass} to='/home' onClick={() => IllicoAudio.playNavigationForwardAudio()} />

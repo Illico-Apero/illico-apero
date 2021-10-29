@@ -12,7 +12,6 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import IllicoButton from '../components/IllicoButton';
 import StyledLink from '../components/Generic/StyledLink';
 import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
-import addresses from '../assets/addresses.json';
 import AddressService from '../network/services/AddressService';
 import UserService from '../network/services/UserService';
 import FormValidator from '../utils/FormValidator';
@@ -24,6 +23,7 @@ import FrontEndLogService from '../network/services/FrontEndLogService';
 import Utils from '../utils/Utils';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
 import IllicoAudio from '../utils/IllicoAudio';
+import IllicoAddresses from '../components/IllicoAddresses';
 
 
 //TODO : display a message "already logged in" or redirect to home if already logged in.
@@ -36,7 +36,6 @@ export default class Register extends React.Component {
 
     constructor(props) {
         super(props);
-        //TO REMOVE IN PROD
         this.state = {
             loaded: false,
             isUserLoggedIn: false,
@@ -79,6 +78,7 @@ export default class Register extends React.Component {
                 distance: 4000
             }
         }
+        this.checkAndRefreshAddress = this.checkAndRefreshAddress.bind(this);
         this.frontEndLogService = new FrontEndLogService();
         this.userService = new UserService();
         this.addressService = new AddressService();
@@ -180,7 +180,7 @@ export default class Register extends React.Component {
      * 
      * @param {*} event 
      */
-    isAddressEligible(event, value) {
+     checkAndRefreshAddress(event, value) {
         let updatedErrors = this.state.errors;
         let form = this.state.form;
         if(value != null) {
@@ -200,6 +200,7 @@ export default class Register extends React.Component {
             updatedErrors.addressHelper = 'Veuillez saisir une addresse';
             form.addressObject = null;
         }
+        this.setState({errors:updatedErrors});
     }
 
     /**
@@ -220,6 +221,7 @@ export default class Register extends React.Component {
             updatedErrors[errorKey] = true;
             updatedErrors[helperKey] = errorHelperText;
         }
+        this.setState({errors:updatedErrors});
     }
 
     handleSubmit() {
@@ -353,11 +355,7 @@ export default class Register extends React.Component {
         // on va à gauche par défaut, ou bien à la direction donnée par les props
         const slideDirection =  RedirectionStateHandler.getSlideDirection('left', this.props.location);
 
-        // limit to 10 addresses to display
-        const OPTIONS_LIMIT = 15;
-        const filterOptions = createFilterOptions({
-          limit: OPTIONS_LIMIT
-        });
+
 
         return (
             <div>
@@ -377,14 +375,11 @@ export default class Register extends React.Component {
                         <TextField id='surname'             error={this.state.errors.surnameError}          helperText={this.state.errors.surnameHelper}                  size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Nom'                       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         <TextField id='phone'               error={this.state.errors.phoneError}            helperText={this.state.errors.phoneHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='tel'      label='Numéro de téléphone'       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :10}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         
-                        <Autocomplete id="address_autocomplete" options={addresses} getOptionLabel={(option) => FormValidator.formatAddress(option)} 
-                        filterOptions={filterOptions} clearOnEscape onChange={(event, value) => {this.isAddressEligible(event, value)}}
-                            renderInput={(params) => ( 
-                            <TextField {...params} id="address" label="Addresse" variant="outlined" style={{zIndex: this.props.useNegativeZIndex ? -1 : 0}}
-                            onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)}}
-                            helperText={this.state.errors.addressHelper} error={this.state.errors.addressError}
-                            onClick={() => IllicoAudio.playTapAudio()}
-                            />)}
+
+                        <IllicoAddresses addressHelper={this.state.errors.addressHelper} 
+                            addressError={this.state.errors.addressError}
+                            onChange={this.checkAndRefreshAddress} 
+                            useNegativeZIndex={this.props.useNegativeZIndex}
                         />
                         {/* <TextField id='address'             error={false} size='small'               variant='outlined' required={true}                     type='text'     label='Adresse'                   onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } helperText="Sur Dijon et alentours uniquement*" style={{ marginTop:'0.7em', marginBottom:'0.5em',width:'16em'}}/> */}
                         

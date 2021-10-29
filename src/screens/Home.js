@@ -252,7 +252,7 @@ export default class Home extends React.Component {
                             </Typography>
                             {
                                 this.state.categories !== null ?   
-                                <Grid container spacing={3}>
+                                <Grid container>
                                 {
                                     this.state.categories.map((category, index) => (
                                         <Grid key={index} item xs>

@@ -213,7 +213,7 @@ export default class Category extends React.Component {
                         {
                             this.state.products !== null ?
                             <div id='products' style= {{marginBottom:'5em'}}>
-                                <Grid container spacing={3}>
+                                <Grid container spacing={3} xs={12}>
                                     {
                                         this.state.products.map(
                                         (product, index) => (
