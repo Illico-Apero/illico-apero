@@ -1,8 +1,8 @@
 {
     "server": {
         "host": "192.168.0.55",
-        "port": 8080,
-        "baseUrl": "https://192.168.0.55:8080/api/v1/"
+        "port": 9412,
+        "baseUrl": "https://192.168.0.55:9412/api/v1/"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
@@ -17,6 +17,9 @@
         "addProductToCart": "cart/add-product",
         "addFormulaToCart": "cart/add-formula",
         "getAmountInCart": "cart/amount-in-cart",
-        "getCart": "cart/get-cart"
+        "getCart": "cart/get-cart",
+        "saveCart":"cart/save-cart",
+        "changeAddress":"address/change-address",
+        "placeOrder":"order/place-order"
     }
 }

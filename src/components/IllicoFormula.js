@@ -48,7 +48,7 @@ class IllicoFormula extends React.Component
                             {this.props.description}
                         </Typography>
                         <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.8em', textAlign:'left'}}>
-                            {this.props.price + ' €'}
+                            {(this.props.price).toFixed(2)}€
                         </Typography>
                     </CardContent>
                     <Divider/>

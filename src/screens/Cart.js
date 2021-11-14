@@ -261,7 +261,7 @@ export default class Cart extends React.Component {
                                         Total
                                         </Typography>
                                         <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
-                                            {this.state.cartEntity.totalPrice + '€'}
+                                            {this.state.cartEntity.totalPrice.toFixed(2)}€
                                         </Typography>
                                     </div>
                                     <div style={{marginLeft:'1em'}}>
@@ -309,7 +309,7 @@ export default class Cart extends React.Component {
                                     !this.state.cartEntity.cartProductsByIdCart.every(item => !item) ?
                                     <>
                                         <Typography variant='h5' style={{marginTop:'2em',marginBottom:'0.5em', color:'#b26a00'}}>
-                                            Vos produits {' '}
+                                            Vos Boissons {' '}
                                             <img src={blue_bubble} alt='blue geometric circle' style={{height:'0.7em'}}/>
                                         </Typography> {
                                             this.state.cartEntity.cartProductsByIdCart.map(

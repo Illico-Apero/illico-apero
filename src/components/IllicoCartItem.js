@@ -99,7 +99,7 @@ export default class IllicoCartItem extends React.Component {
                     {this.state.itemName}
                     </Typography>                    
                     <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
-                        {this.state.price + '€'}
+                        {(this.state.price).toFixed(2)}€
                     </Typography>
                         
                     <div style={{position:'absolute', bottom:5, flexDirection:'row'}}>

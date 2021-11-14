@@ -21,13 +21,13 @@ import Checkout from './screens/Checkout';
 import UserService from './network/services/UserService';
 import ApiResponse from './models/api/ApiResponse';
 
+//TODO : IF SERVER.APP.ISACCESSIBLE --> Return App. Otherwise return maintenance page
 function App() {
     return (
         <Router>
             <ThemeProvider theme={defaultTheme}>
                 <div className='App'>
                     <Switch>
-
                         <Route exact path='/' component={Landing} />
                         <Route path='/login' component={Login} />
                         <Route path='/forgotten-password' component={ForgottenPassword} />

@@ -188,10 +188,12 @@ export default class Register extends React.Component {
             form.addressObject = value;
             let approxDistanceFromCenter = value.approxMetersFromMainStorageCenter;
             if(approxDistanceFromCenter > this.state.radius.distance) {
+                IllicoAudio.playAlertAudio();
                 updatedErrors.addressError = true;
                 updatedErrors.addressHelper = "Cette addresse n'est pas éligible !";
             }
             else if(approxDistanceFromCenter < this.state.radius.distance) {
+                IllicoAudio.playUiLockAudio();
                 updatedErrors.addressError = false;
                 updatedErrors.addressHelper = '';
             }
@@ -370,7 +372,7 @@ export default class Register extends React.Component {
                     <FormControl>
                         <TextField id='email'               error={this.state.errors.emailError}            helperText={this.state.errors.emailHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='email'    label='Adresse e-mail'            onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         <TextField id='password'            error={this.state.errors.passwordError}         helperText={this.state.errors.passwordHelper}                 size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe'              onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}} onClick={() => IllicoAudio.playTapAudio()} /> <br/>
-                        <TextField id='passwordConfirm'    error={this.state.errors.passwordConfirmError} helperText={this.state.errors.passwordConfirmHelper}         size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Confirmer le mot de passe' onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
+                        <TextField id='passwordConfirm'     error={this.state.errors.passwordConfirmError} helperText={this.state.errors.passwordConfirmHelper}         size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Confirmer le mot de passe' onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :32}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         <TextField id='firstname'           error={this.state.errors.firstname_error}        helperText={this.state.errors.firstnameHelper}                size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Prénom'                    onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         <TextField id='surname'             error={this.state.errors.surnameError}          helperText={this.state.errors.surnameHelper}                  size='small' variant='outlined' required={true} style={buttonStyle} type='text'     label='Nom'                       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :50}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>
                         <TextField id='phone'               error={this.state.errors.phoneError}            helperText={this.state.errors.phoneHelper}                    size='small' variant='outlined' required={true} style={buttonStyle} type='tel'      label='Numéro de téléphone'       onChange={(event) => {this.updateFormValue(event.target.id, event.target.value)} } inputProps={{maxLength :10}} onClick={() => IllicoAudio.playTapAudio()}/> <br/>

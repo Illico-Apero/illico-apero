@@ -1,13 +1,25 @@
 {
     "server": {
         "url": "TODO",
-        "port": 8080,
-        "baseUrl": "https://TODO:8080/api/v1"
+        "port": 9412,
+        "baseUrl": "https://TODO:9412/api/v1"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
         "signUp": "user/sign-up",
         "signIn": "user/sign-in",
-        "saveLog": "log/save"
+        "refreshToken": "user/refresh-token",
+        "testToken": "user/test-token",
+        "saveLog": "log/save",
+        "getCategories": "product/get-categories",
+        "getProducts": "product/get-products",
+        "getFormulas": "formula/get-formulas",
+        "addProductToCart": "cart/add-product",
+        "addFormulaToCart": "cart/add-formula",
+        "getAmountInCart": "cart/amount-in-cart",
+        "getCart": "cart/get-cart",
+        "saveCart":"cart/save-cart",
+        "changeAddress":"address/change-address",
+        "placeOrder":"order/place-order"
     }
 }

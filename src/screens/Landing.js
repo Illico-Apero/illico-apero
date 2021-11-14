@@ -84,7 +84,6 @@ export default class Landing extends React.Component {
                     <Closed/>
                 }
 
-                {/* TODO : make redirection directly with IllicoButton*/}
                 <NoDecorationLink to={homeRedirectState}>
                     <IllicoButton color='primary' text='Catalogue' onClick={() => IllicoAudio.playTapAudio()}/>
                 </NoDecorationLink>
@@ -102,7 +101,25 @@ export default class Landing extends React.Component {
                         </div>
                     </div>
                 }
-                {/* TODO Router, Links to different pages */}
+
+                <div id='footer' style={{
+                    marginTop:'1em',
+                    padding:'1em',
+                    position:'fixed',
+                    bottom:0,
+                    left:0,
+                    width:'100%'
+                }}>
+                    <Typography variant='body1' style={{fontStyle:'italic', fontSize:'10px'}}>
+                        Illico Apéro - Vente d'alcool en livraison à Dijon.
+                    </Typography>
+                    <Typography variant='body1' style={{fontStyle:'italic', fontSize:'10px'}}>
+                        Livraison sur Dijon et ses alentours en 30 minutes.
+                    </Typography>
+                    <Typography variant='body1' style={{fontStyle:'italic', fontSize:'10px'}}>
+                        Vente de bières, spiritueux, champagnes, vins et boissons sur Dijon.
+                    </Typography>
+                </div>
             </div>
         );
     }

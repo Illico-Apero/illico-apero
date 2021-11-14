@@ -125,7 +125,7 @@ class IllicoProduct extends React.Component
 
 
                     <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.8em', textAlign:'left'}}>
-                        {product.price + ' €'}
+                        {(product.price).toFixed(2)}€
                     </Typography>
                     </CardContent>
                     <Divider/>
