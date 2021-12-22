@@ -2,7 +2,7 @@
     "server": {
         "host": "192.168.0.55",
         "port": 9412,
-        "baseUrl": "https://192.168.0.55:9412/api/v1/"
+        "baseUrl": "https://localhost:9412/api/v1/"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
@@ -19,7 +19,12 @@
         "getAmountInCart": "cart/amount-in-cart",
         "getCart": "cart/get-cart",
         "saveCart":"cart/save-cart",
+        "clearCart":"cart/clear-cart",
         "changeAddress":"address/change-address",
-        "placeOrder":"order/place-order"
-    }
+        "placeOrder":"order/place-order",
+        "getOrders":"order/get-orders",
+        "isStoreOpened":"store/is-store-opened",
+        "getStore":"store/get-store"
+    },
+    "debug":true
 }

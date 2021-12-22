@@ -6,6 +6,10 @@ import IllicoBottomNavigation from '../components/IllicoBottomNavigation';
 import IllicoTopNavigation from '../components/IllicoTopNavigation';
 import IllicoAskForConnection from '../components/IllicoAskForConnection';
 import CartService from '../network/services/CartService';
+import { Alert } from '@material-ui/lab';
+import { CircularProgress } from '@material-ui/core';
+import OrderService from '../network/services/OrderService';
+import OrderEntity from '../models/OrderEntity';
 
 export default class Profile extends React.Component {
 
@@ -16,9 +20,12 @@ export default class Profile extends React.Component {
             bottomNavigationValue: 0,
             isUserLoggedIn: false,
             userEntity:null,
+            /** @type {OrderEntity[]} orders */
+            orders:null
         }
 
         this.cartService = new CartService();
+        this.orderService = new OrderService();
     }
 
     retrieveQuantityInCart(callback) {
@@ -42,7 +49,15 @@ export default class Profile extends React.Component {
                 this.setState({isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn'))}, () => {
                     if(this.state.isUserLoggedIn) {
                         this.retrieveQuantityInCart(() => {
-                            this.setState({loaded:true});
+                            this.orderService.getOrders(this.state.userEntity, (data) => {
+                                if(data.status === ApiResponse.GET_SUCCESS()) {
+                                        this.setState({orders:data.response}, () => {
+                                        this.setState({loaded:true});
+                                    })
+                                } else {
+                                    this.setState({loaded:true});
+                                }
+                            });
                         });
                     } else {
                         this.setState({loaded:true});
@@ -71,12 +86,30 @@ export default class Profile extends React.Component {
             <div>
                 <IllicoTopNavigation title='Profil' backUrl='/profile' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
                     {
-                        this.state.isUserLoggedIn ?
-                        <div>
-                            Todo.
-                        </div>
-                        :
-                        <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
+                        this.state.loaded ?
+                        <>
+                        {
+                            this.state.isUserLoggedIn?
+                            <div id='profile'>
+                            {
+                                this.state.orders !== null && this.state.orders.length !== 0 ?
+                                <div id='orders'>
+
+                                </div>
+                                :
+                                <div id='no-orders'>
+                                <Alert severity="info" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                    Vous n'avez encore jamais passé commande 😭 !
+                                </Alert> 
+                                </div>
+                                
+                            }
+                            </div>
+                            :
+                            <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
+                            }
+                        </>
+                        : <CircularProgress/>
                     }
                 <IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart}/>
             </div>

@@ -17,4 +17,10 @@ export default class OrderService {
             callback(data);
         });
     }
+
+    getOrders(userEntity, callback) {
+        Http.get(configuration.server.baseUrl + configuration.endpoints.getOrders + '/' + userEntity.idUser + '/' + userEntity.databaseToken, userEntity.jwt, (data) => {
+            callback(data);
+        });
+    }
 }

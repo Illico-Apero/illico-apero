@@ -19,7 +19,12 @@
         "getAmountInCart": "cart/amount-in-cart",
         "getCart": "cart/get-cart",
         "saveCart":"cart/save-cart",
+        "clearCart":"cart/clear-cart",
         "changeAddress":"address/change-address",
-        "placeOrder":"order/place-order"
-    }
+        "placeOrder":"order/place-order",
+        "getOrders":"order/get-orders",
+        "isStoreOpened":"store/is-store-opened",
+        "getStore":"store/get-store"
+    },
+    "debug":false
 }

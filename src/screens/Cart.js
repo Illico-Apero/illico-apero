@@ -21,6 +21,10 @@ import IllicoBottomNavigation from '../components/IllicoBottomNavigation';
 import IllicoTopNavigation from '../components/IllicoTopNavigation';
 import RemovalInformations from '../models/RemovalInformations';
 import NoDecorationLink from '../components/Generic/NoDecorationLinkClass';
+import StoreService from '../network/services/StoreService';
+
+import configuration from '../config/configuration.json'
+import { Link } from 'react-router-dom';
 
 
 export default class Cart extends React.Component {
@@ -43,11 +47,14 @@ export default class Cart extends React.Component {
             quantityUpdateErrorText:'Impossible de sauvegarder la quantité ❌. Contactez le support.',
             isRemoveItemDialogOpen:false,
             /** @type {RemovalInformations} removalInformations */
-            removalInformations:null
+            removalInformations:null,
+            opened:false
         }
+        if(configuration.debug) console.warn('app is in debug mode');
         this.cartService = new CartService();
         this.frontEndLogService = new FrontEndLogService();
         this.onQuantityChange = this.onQuantityChange.bind(this);
+        this.storeService = new StoreService();
     }
 
     //TODO : Code redundancy between Profile.js, Cart.js, Category.js, Home.js
@@ -66,7 +73,6 @@ export default class Cart extends React.Component {
             })
         });
     }
-
     retrieveCart() {
         Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
             this.cartService.getCart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */ (data) => {
@@ -80,7 +86,6 @@ export default class Cart extends React.Component {
             });
         });
     }
-
     //TODO : CODE REDUNDANCY WITH PROFILE.JS
     componentDidMount() {
         if(!this.state.isUserLoggedIn || this.state.userEntity === null) {
@@ -89,7 +94,19 @@ export default class Cart extends React.Component {
                     if(this.state.isUserLoggedIn) {
                         this.retrieveQuantityInCart(() => {
                             this.retrieveCart();
-                            this.setState({loaded:true});
+                            this.storeService.isStoreOpened( (data) => {
+                                if(data.status !== ApiResponse.GET_ERROR()) {
+                                    if(data.status === ApiResponse.GET_WARNING()) {
+                                        console.warn(data.status);
+                                    }
+                                    this.setState({opened: data.response}, () => {
+                                        this.setState({loaded:true});
+                                    });
+                                }
+                                else {
+                                    this.setState({loaded:true});
+                                }
+                            });
                         });
                     } else {
                         this.setState({loaded:true});
@@ -103,7 +120,6 @@ export default class Cart extends React.Component {
             });
         }
     }
-
     onQuantityChange(event, item, itemIndex, isItemCartFormula) {
         let newQty;
         if(event) {
@@ -136,11 +152,6 @@ export default class Cart extends React.Component {
             this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1(), "Tried to update cart with invalid quantity");
         }
     }
-
-    /**
-     * 
-     * @param {CartEntity} cart 
-     */
     saveCartAndUpdatePrice(cart) {
         Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
             this.cartService.saveCart(this.state.userEntity, cart, this.state.userEntity.jwt, (data) => {
@@ -148,7 +159,6 @@ export default class Cart extends React.Component {
                     cart.totalPrice = data.response;
                     this.setState({cartEntity:cart}, () => {
                         this.retrieveQuantityInCart(()=>{});
-                        console.log(this.state.cartEntity)
                     });
                     this.setState({isQuantityUpdatedAlertOpen:true});
                 }
@@ -160,10 +170,6 @@ export default class Cart extends React.Component {
             });
         });
     }
-
-    //TODO Add cart recap (price) + delete bin + develop checkout page + start stripe payment 
-
-    
     getUserIdIfLoggedInOtherwiseMinus1() { //TODO : refactor, redundant
         return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
     }
@@ -203,7 +209,6 @@ export default class Cart extends React.Component {
         this.setState({isRemoveItemDialogOpen : false});
         IllicoAudio.playUiLockAudio();
     }    
-
     render() {
         const loginRedirectState = {
             pathname: '/login',
@@ -228,143 +233,151 @@ export default class Cart extends React.Component {
             padding:'1em',
             textAlign:'left'
         }
+        let buttonDisabled = true;
+        if(this.state.opened) buttonDisabled = false;
+        if(configuration.debug) buttonDisabled = false;
         return (
-            <>
-                <IllicoTopNavigation title='Panier' backUrl='/profile' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
-                {
-                    this.state.isUserLoggedIn ?
-                    <div id='cart'> {
-                        this.state.cartLoadingError ?
-                        <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
-                            Une erreur est survenue,
-                            impossible de charger votre panier.
-                            Veuillez réessayer plus tard
-                            ou informer le support.
-                        </Alert> 
-                        : 
-                        ''
-                        }{
-                        this.state.cartEntity !== null ?
-                        <div style={{marginBottom:'5em'}}> {
-                            (this.state.cartEntity.cartFormulasByIdCart.length === 0 && this.state.cartEntity.cartProductsByIdCart.length === 0) ||
-                            (this.state.cartEntity.cartFormulasByIdCart.every(item => !item) && this.state.cartEntity.cartProductsByIdCart.every(item => !item)) ?
-                            <Alert severity="info" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
-                                Votre panier est vide 😭 !
-                            </Alert> 
-                            :
-                            <div id="cart">
+            
 
-                                <div id="checkout" style={{marginTop:'2em', marginBottom:'1em'}}>
-                                    <Card elevation={3} style={checkoutRootStyle}>
-                                    <div style={{paddingRight:'0.5em', marginTop:'10px'}}>
-                                        <Typography>
-                                        Total
-                                        </Typography>
-                                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
-                                            {this.state.cartEntity.totalPrice.toFixed(2)}€
-                                        </Typography>
-                                    </div>
-                                    <div style={{marginLeft:'1em'}}>
-                                        <NoDecorationLink to={checkoutRedirectState}>
-                                            <Button onClick={() => IllicoAudio.playTapAudio()} variant='contained' color='primary' style={{fontWeight:'bold'}}>
+            this.state.loaded ?
+                <>
+                    <IllicoTopNavigation title='Panier' backUrl='/profile' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
+                    {
+                        this.state.isUserLoggedIn ?
+                        <div id='cart'> {
+                            this.state.cartLoadingError ?
+                            <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                Une erreur est survenue,
+                                impossible de charger votre panier.
+                                Veuillez réessayer plus tard
+                                ou informer le support.
+                            </Alert> 
+                            : 
+                            ''
+                            }{
+                            this.state.cartEntity !== null ?
+                            <div style={{marginBottom:'5em'}}> {
+                                (this.state.cartEntity.cartFormulasByIdCart.length === 0 && this.state.cartEntity.cartProductsByIdCart.length === 0) ||
+                                (this.state.cartEntity.cartFormulasByIdCart.every(item => !item) && this.state.cartEntity.cartProductsByIdCart.every(item => !item)) ?
+                                <Alert severity='info' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                    Votre panier est vide 😭 !
+                                </Alert> 
+                                :
+                                <div id="cart">
+                                    <div id="checkout" style={{marginTop:'2em', marginBottom:'1em'}}>
+                                        <Card elevation={3} style={checkoutRootStyle}>
+                                        <div style={{paddingRight:'0.5em', marginTop:'10px'}}>
+                                            <Typography>
+                                            Total
+                                            </Typography>
+                                            <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
+                                                {this.state.cartEntity.totalPrice.toFixed(2)}€
+                                            </Typography>
+                                        </div>
+                                        <div style={{marginLeft:'1em'}}>
+                                            <Button disabled={buttonDisabled} component={Link} to={checkoutRedirectState} onClick={() => IllicoAudio.playTapAudio()} variant='contained' color='primary' style={{fontWeight:'bold'}}>
                                                 Livraison et paiement
                                             </Button>
-                                        </NoDecorationLink>
-                                    </div>
-                                    </Card>
- 
-                                </div>
-
-
-                                <div id='formulas'> {
-                                    this.state.cartEntity.cartFormulasByIdCart !== null &&
-                                    this.state.cartEntity.cartFormulasByIdCart.length > 0 &&
-                                    !this.state.cartEntity.cartFormulasByIdCart.every(item => !item)?
-                                    <>
-                                        <Typography variant='h5' style={{marginTop:'1em', marginBottom:'0.5em', color:'#b26a00'}}>
-                                            Vos formules {' '}
-                                            <img src={yellow_circle} alt='yellow geometric circles' style={{height:'0.7em'}}/>
-                                        </Typography> {
-                                            this.state.cartEntity.cartFormulasByIdCart.map(
-                                            /** @param {CartFormulasEntity} cartFormula */
-                                            (cartFormula, index) => (
-                                                <IllicoCartItem
-                                                    onQuantityChange={this.onQuantityChange}
-                                                    isCartFormula
-                                                    item={cartFormula}
-                                                    index={index}
-                                                    key={index}
-                                                />
-                                            ))
+                                        </div>
+                                        </Card>
+                                        {
+                                            this.state.opened ?
+                                            ''
+                                            :
+                                            <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
+                                                Nous sommes actuellement fermés 🥺. Revenez plus tard !
+                                            </Alert> 
                                         }
-                                    </>
-                                    : 
-                                    ''
-                                }
-                                </div>
-                                
-                                <div id='products'> {
-                                    this.state.cartEntity.cartProductsByIdCart !== null &&
-                                    this.state.cartEntity.cartProductsByIdCart.length > 0 &&
-                                    !this.state.cartEntity.cartProductsByIdCart.every(item => !item) ?
-                                    <>
-                                        <Typography variant='h5' style={{marginTop:'2em',marginBottom:'0.5em', color:'#b26a00'}}>
-                                            Vos Boissons {' '}
-                                            <img src={blue_bubble} alt='blue geometric circle' style={{height:'0.7em'}}/>
-                                        </Typography> {
-                                            this.state.cartEntity.cartProductsByIdCart.map(
-                                                /** @param {CartProductsEntity} cartProduct */
-                                                (cartProduct, index) => (
+                                    </div>
+                                    <div id='formulas'> {
+                                        this.state.cartEntity.cartFormulasByIdCart !== null &&
+                                        this.state.cartEntity.cartFormulasByIdCart.length > 0 &&
+                                        !this.state.cartEntity.cartFormulasByIdCart.every(item => !item)?
+                                        <>
+                                            <Typography variant='h5' style={{marginTop:'1em', marginBottom:'0.5em', color:'#b26a00'}}>
+                                                Vos formules {' '}
+                                                <img src={yellow_circle} alt='yellow geometric circles' style={{height:'0.7em'}}/>
+                                            </Typography> {
+                                                this.state.cartEntity.cartFormulasByIdCart.map(
+                                                /** @param {CartFormulasEntity} cartFormula */
+                                                (cartFormula, index) => (
                                                     <IllicoCartItem
                                                         onQuantityChange={this.onQuantityChange}
-                                                        item={cartProduct}
+                                                        isCartFormula
+                                                        item={cartFormula}
                                                         index={index}
                                                         key={index}
                                                     />
-                                            ))
-                                        }
-                                    </>
-                                    : 
-                                    ''
+                                                ))
+                                            }
+                                        </>
+                                        : 
+                                        ''
+                                    }
+                                    </div>                           
+                                    <div id='products'> {
+                                        this.state.cartEntity.cartProductsByIdCart !== null &&
+                                        this.state.cartEntity.cartProductsByIdCart.length > 0 &&
+                                        !this.state.cartEntity.cartProductsByIdCart.every(item => !item) ?
+                                        <>
+                                            <Typography variant='h5' style={{marginTop:'2em',marginBottom:'0.5em', color:'#b26a00'}}>
+                                                Vos Boissons {' '}
+                                                <img src={blue_bubble} alt='blue geometric circle' style={{height:'0.7em'}}/>
+                                            </Typography> {
+                                                this.state.cartEntity.cartProductsByIdCart.map(
+                                                    /** @param {CartProductsEntity} cartProduct */
+                                                    (cartProduct, index) => (
+                                                        <IllicoCartItem
+                                                            onQuantityChange={this.onQuantityChange}
+                                                            item={cartProduct}
+                                                            index={index}
+                                                            key={index}
+                                                        />
+                                                ))
+                                            }
+                                        </>
+                                        : 
+                                        ''
+                                    }
+                                    </div>
+                                </div>
                                 }
                                 </div>
+                            :
+                            <div style={{marginBottom:'5em', marginTop:'1em'}}>
+                                <CircularProgress/>
                             </div>
                             }
-                            </div>
-                        :
-                        <div style={{marginBottom:'5em', marginTop:'1em'}}>
-                            <CircularProgress/>
                         </div>
-                        }
+                        :
+                        <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
+                    }
+                    <IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart}/>
+                    <div id='dialogs'>
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)} severity="success">
+                                {this.state.quantityUpdatedText}
+                            </MuiAlert>
+                        </Snackbar>
+
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedErrorAlertOpen} autoHideDuration={5000} onClose={(event, reason) => this.handleCloseQuantityUpdateErrorAlert(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdateErrorAlert(event, reason)} severity="error">
+                                {this.state.quantityUpdateErrorText}
+                            </MuiAlert>
+                        </Snackbar>
+
+
+                        <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="delete-cart-item-title" open={this.state.isRemoveItemDialogOpen}>
+                            <DialogTitle id="delete-cart-item-title">Supprimer l'article du panier ?</DialogTitle>
+                            <DialogActions>
+                                <Button variant='contained' color='primary' onClick={() => this.handleRemoveFromCartCancel()}> Annuler </Button>
+                                <Button variant='contained' color='secondary' onClick={() => this.handleRemoveFromCartAccept()} autoFocus> Supprimer </Button>
+                            </DialogActions>
+                        </Dialog>
                     </div>
-                    :
-                    <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
-                }
-                <IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart}/>
-            
-                <div id='dialogs'>
-                    <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)}>
-                        <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)} severity="success">
-                            {this.state.quantityUpdatedText}
-                        </MuiAlert>
-                    </Snackbar>
-
-                    <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedErrorAlertOpen} autoHideDuration={5000} onClose={(event, reason) => this.handleCloseQuantityUpdateErrorAlert(event, reason)}>
-                        <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdateErrorAlert(event, reason)} severity="error">
-                            {this.state.quantityUpdateErrorText}
-                        </MuiAlert>
-                    </Snackbar>
-
-
-                    <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="delete-cart-item-title" open={this.state.isRemoveItemDialogOpen}>
-                        <DialogTitle id="delete-cart-item-title">Supprimer l'article du panier ?</DialogTitle>
-                        <DialogActions>
-                            <Button variant='contained' color='primary' onClick={() => this.handleRemoveFromCartCancel()}> Annuler </Button>
-                            <Button variant='contained' color='secondary' onClick={() => this.handleRemoveFromCartAccept()} autoFocus> Supprimer </Button>
-                        </DialogActions>
-                    </Dialog>
-                </div>
-            </>
+                </>
+                :
+                <CircularProgress/>
         )
     }
 }

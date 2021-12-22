@@ -18,35 +18,55 @@ import Category from './screens/Category';
 import Profile from './screens/Profile';
 import Cart from './screens/Cart';
 import Checkout from './screens/Checkout';
-import UserService from './network/services/UserService';
-import ApiResponse from './models/api/ApiResponse';
+import configuration from './config/configuration.json';
+import { Alert } from '@material-ui/lab';
+import { Typography } from '@material-ui/core';
 
 //TODO : IF SERVER.APP.ISACCESSIBLE --> Return App. Otherwise return maintenance page
 function App() {
     return (
-        <Router>
-            <ThemeProvider theme={defaultTheme}>
-                <div className='App'>
-                    <Switch>
-                        <Route exact path='/' component={Landing} />
-                        <Route path='/login' component={Login} />
-                        <Route path='/forgotten-password' component={ForgottenPassword} />
-                        <Route path='/register' component={Register} />
-                        <Route path='/delivery-zone' component={DeliveryZone} />
-                        <Route path='/legal-terms' component={LegalTerms} />
-                        <Route path='/home' component={Home} />
-                        <Route path='/profile' component={Profile} />
-                        <Route path='/cart' component={Cart} />
-                        <Route path='/contact' component={Contact} />
-                        <Route path='/about' component={About} />
-                        <Route path='/category' component={Category} />
-                        <Route path='/checkout' component={Checkout} />
-                    </Switch>
-                </div>
+        <div>
+        {
+            //TODO MAINTENANCE WITH SERVICE
+            configuration.maintenance ?
+            <div style={{marginRight:'auto', marginLeft:'auto'}}>
+                <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
+                    Le site d'Illico Apéro est actuellement en cours de maintenance. Veuillez réessayer plus tard.
+                    Vous pouvez nous contacter par mail à l'addresse suivante : illicoapero.serviceclient@gmail.com.
+                    Vous pouvez également nous contacter sur intagram ou facebook (@illico.apero.dijon)
+                </Alert> 
+                <Typography variant='body1' style={{textAlign:'center'}}>
+                    <a  href='https://www.facebook.com/illico.apero.dijon'>Facebook</a>
+                    <br/>
+                    <br/>
+                    <a  href='https://www.instagram.com/illico.apero.dijon/?hl=fr'>Instagram</a>
+                </Typography>
+            </div>
+            :
+            <Router>
+                <ThemeProvider theme={defaultTheme}>
+                    <div className='App'>
+                        <Switch>
+                            <Route exact path='/' component={Landing} />
+                            <Route path='/login' component={Login} />
+                            <Route path='/forgotten-password' component={ForgottenPassword} />
+                            <Route path='/register' component={Register} />
+                            <Route path='/delivery-zone' component={DeliveryZone} />
+                            <Route path='/legal-terms' component={LegalTerms} />
+                            <Route path='/home' component={Home} />
+                            <Route path='/profile' component={Profile} />
+                            <Route path='/cart' component={Cart} />
+                            <Route path='/contact' component={Contact} />
+                            <Route path='/about' component={About} />
+                            <Route path='/category' component={Category} />
+                            <Route path='/checkout' component={Checkout} />
+                        </Switch>
+                    </div>
 
-            </ThemeProvider>
-        </Router>
-
+                </ThemeProvider>
+            </Router>
+        }
+        </div>
     );
 }
 

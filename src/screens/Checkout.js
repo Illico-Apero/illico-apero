@@ -1,8 +1,7 @@
 import React from 'react'
-import Slide from '@material-ui/core/Slide';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
 import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
-import { Badge, Card, CardContent, CardMedia, Dialog, DialogActions, DialogTitle, FormControl, Grid, Button, Typography, ListItemText, List, TableContainer, Paper, TableHead, TableRow, TableCell, Table, TextareaAutosize, CircularProgress } from '@material-ui/core';
+import { Badge, Card, CardContent, CardMedia, Dialog, DialogActions, DialogTitle, FormControl, Grid, Button, Typography, ListItemText, List, TableContainer, Paper, TableHead, TableRow, TableCell, Table, TextareaAutosize, CircularProgress, Snackbar } from '@material-ui/core';
 import CartEntity from '../models/CartEntity';
 import Utils from '../utils/Utils';
 import ApiResponse from '../models/api/ApiResponse';
@@ -20,6 +19,9 @@ import yellow_circle from '../assets/design/geometry/yellow_circles_small.png';
 import blue_bubble from '../assets/design/geometry/blue_bubble.png';
 import OrderService from '../network/services/OrderService';
 import Paypal from '../components/Paypal';
+import StoreService from '../network/services/StoreService';
+import configuration from '../config/configuration.json'
+import MuiAlert from '@material-ui/lab/Alert';
 
 const DELIVERY_PRICE = 2.99;
 
@@ -53,10 +55,16 @@ export default class Checkout extends React.Component {
             changedAddress:null,
             deliveryPrice:DELIVERY_PRICE,
             userRemark:'',
+            paymentSuccessfulAlertOpen:false,
+            paymentSuccessfulAlertText:'Paiement effectué avec succès. Votre commande arrive 🔥🍻💥 !',
+            paymentError:false,
+            opened:false,
             radius: {
                 distance: 4000
             }
         }
+
+        if(configuration.debug) console.warn('app is in debug mode');
 
         this.handleAddressChange = this.handleAddressChange.bind(this);
         this.handleOrderCreation = this.handleOrderCreation.bind(this);
@@ -65,6 +73,7 @@ export default class Checkout extends React.Component {
         this.frontEndLogService = new FrontEndLogService();
         this.addressService = new AddressService();
         this.orderService = new OrderService();
+        this.storeService = new StoreService();
         this.addressService.getDeliveryRadius(
         /** @param {Radius} data */
         (data) => {
@@ -79,7 +88,19 @@ export default class Checkout extends React.Component {
                     if(this.state.isUserLoggedIn) {
                         this.retrieveQuantityInCart(() => {
                             this.retrieveCart();
-                            this.setState({loaded:true});
+                            this.storeService.isStoreOpened( (data) => {
+                                if(data.status !== ApiResponse.GET_ERROR()) {
+                                    if(data.status === ApiResponse.GET_WARNING()) {
+                                        console.warn(data.status);
+                                    }
+                                    this.setState({opened: data.response}, () => {
+                                        this.setState({loaded:true});
+                                    });
+                                }
+                                else {
+                                    this.setState({loaded:true});
+                                }
+                            });
                         });
                     } else {
                         this.setState({loaded:true});
@@ -89,7 +110,19 @@ export default class Checkout extends React.Component {
         } 
         else {
             this.retrieveQuantityInCart(() => {
-                this.setState({loaded:true});
+                this.storeService.isStoreOpened( (data) => {
+                    if(data.status !== ApiResponse.GET_ERROR()) {
+                        if(data.status === ApiResponse.GET_WARNING()) {
+                            console.warn(data.status);
+                        }
+                        this.setState({opened: data.response}, () => {
+                            this.setState({loaded:true});
+                        });
+                    }
+                    else {
+                        this.setState({loaded:true});
+                    }
+                });
             });
         }
     }
@@ -123,9 +156,6 @@ export default class Checkout extends React.Component {
     getUserIdIfLoggedInOtherwiseMinus1() { //TODO : refactor, redundant
         return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
     }
-    /**
-     * @param {AddressEntity} value 
-     */
     handleAddressChange(event, value) {
         if(value != null) {
             let approxDistanceFromCenter = value.approxMetersFromMainStorageCenter;
@@ -175,6 +205,12 @@ export default class Checkout extends React.Component {
     handleTextAreaChange(event) {
         this.setState({userRemark:event.target.value});
     }
+    handleClosePaymentSuccessfulAlert(event, reason) {
+        if (reason === 'clickaway') {
+            return;
+        }
+        this.setState({paymentSuccessfulAlertOpen : false});
+    }
 
 ///////////////////////////////// PAYPAL & PAYMENT ///////////////////////////////////////////////////////////////////////////////
 
@@ -184,13 +220,27 @@ export default class Checkout extends React.Component {
             this.orderService.placeOrder(this.state.userEntity, paypalId, this.state.userRemark ? this.state.userRemark : '', (data) => {
                 console.log("Order placed");
                 console.log(data);
-                //TODO : Show a success message / Empty cart / Redirect to 'My orders' page
+                this.setState({paymentSuccessfulAlertOpen:true});
+                Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
+                    this.cartService.clearCart(this.state.userEntity, this.state.cartEntity, this.state.userEntity.jwt, (data) => {
+                        IllicoAudio.playAddToCartAudio();
+                        console.log(data);
+                        setTimeout(() => {
+                            this.props.history.push("/profile"); // redirection 👌
+                        }, 1500); // waits for 2000ms
+                    });
+                });
             });
         });
     }
     paymentPlacedCallback(payment) {
-        this.handleOrderCreation(payment.id);
-        console.log('checkout');
+        if(payment !== null || payment !== undefined) {
+            this.handleOrderCreation(payment.id);
+            console.log('checkout');
+        }
+        else {
+            this.setState({paymentError:true});
+        }
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -207,8 +257,6 @@ export default class Checkout extends React.Component {
             this.state.cartEntity.cartProductsByIdCart.length > 0)
         );
     }
-    //TODO : Bandeau en bas "Total" (comme cdiscount) avec un lien vers 'Voir le récap' qui scrolle auto jusqu'en bas
-    //TODO : Tout en bas de la page, le récap
     render() {
         const cardRootStyle = {
             display: 'flex',
@@ -228,7 +276,7 @@ export default class Checkout extends React.Component {
             }
         }
         return (
-            //TODO : IF !OPENING_HOURS --> do not display any of that
+            this.state.opened || configuration.debug ?
             <>
                 <IllicoSimpleAppBar to={previousPageRedirection} title='Livraison et paiement'/>
                 {
@@ -334,7 +382,6 @@ export default class Checkout extends React.Component {
                                 </div>
                                 <div id='fixed-price-recap'>
                                 {
-                                    /** //todo : ici le recap de prix fixé tout en bas de la page */
                                     this.isEverythingOKforCartOperations() ?
                                     <>
                                         <Typography variant='h6' style={{ color:'#b26a00', marginBottom:'0.5em'}}>
@@ -438,6 +485,11 @@ export default class Checkout extends React.Component {
                                         Frais de livraison : {this.state.deliveryPrice.toFixed(2)}€
                                     </Typography>
                                 </div>
+                                <div id='reduction-code'>
+                                    TODO : CODE DE REDUCTION AVEC TEXTINPUT + VERIF BD + BOUTON DE VALIATION "APPLIQUER LE CODE PROMO" + CALCUL DU NOUVEAU MONTANT
+                                    + MODIFICATION DU SERVICE PAYPAL POUR PRENDRE EN COMPTE LA REDUC DANS LE PAIEMENT.
+                                    + LE CODE PROMO S'APPLIQUE SUR TOUTE LA COMMANDE ? OU UNIQUEMENT LES ARTICLES ?
+                                </div>
                                 <div id='total'>
                                     <Typography variant='h6' style={{  color:'#b26a00', marginBottom:'1em', marginTop:'1em'}}>
                                         Total : { (this.state.cartEntity.totalPrice + this.state.deliveryPrice).toFixed(2)}€
@@ -454,23 +506,19 @@ export default class Checkout extends React.Component {
                                 <Typography variant='h4' style={{ marginTop:'1em', color:'#b26a00', marginBottom:'0.2em'}}>
                                         Confirmer et payer
                                 </Typography>
-                                <Button onClick={() => this.handleOrderCreation()} variant='contained' color='primary'>
-                                Test order
-                                </Button>
                                     <div id='paypal'>
-                                        {/** // intégration du payement paypal + paypal CB */}
                                         <div style={{width:'300px', marginLeft:'auto', marginRight:'auto'}}>
                                             <Paypal userEntity={this.state.userEntity} cartEntity={this.state.cartEntity} paymentPlacedCallback={this.paymentPlacedCallback}/>
                                         </div>
                                     </div>
                                 </div>
                                 <div id='floating-price-recap' style={{marginTop:'4em'}}>
-                            {
+                                {
                                 this.state.cartEntity != null && this.state.cartEntity.totalPrice !== null ?
                                 <IllicoPriceRecapBottomBar price={this.state.cartEntity.totalPrice + this.state.deliveryPrice}/>
                                 :
                                 ''
-                            }
+                                }
                             </div>
                             </div>
                             :
@@ -482,6 +530,18 @@ export default class Checkout extends React.Component {
                     :
                     <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
                 }
+                {
+                    this.state.paymentError ?
+                    <div>
+                        <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                            Une erreur est survenue pendant le paiement.
+                            Vous n'avez pas été débité. Veuillez contacter le support
+                            ou patienter et réessayer plus tard.
+                        </Alert> 
+                    </div>
+                    :
+                    ''
+                }
                 <div id='utils'>
                     <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="address-change-title" open={this.state.isAddressDialogOpen}>
                         <DialogTitle id="address-change-title">Confirmer le changement d'addresse ?</DialogTitle>
@@ -490,8 +550,19 @@ export default class Checkout extends React.Component {
                             <Button variant='contained' color='secondary' onClick={() => this.handleAddressChangeAccept()} autoFocus> Confirmer </Button>
                         </DialogActions>
                     </Dialog>
+
+                    <Snackbar style={{marginBottom:'3.5em'}} open={this.state.paymentSuccessfulAlertOpen} autoHideDuration={5000} onClose={(event, reason) => this.handleClosePaymentSuccessfulAlert(event, reason)}>
+                    <MuiAlert onClose={(event, reason) => this.handleClosePaymentSuccessfulAlert(event, reason)} severity='success'>
+                        {this.state.paymentSuccessfulAlertText}
+                    </MuiAlert>
+                </Snackbar>
+
                 </div>
             </>
+            :
+            <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
+                Nous sommes actuellement fermés 🥺. Revenez plus tard !
+            </Alert> 
         )
     }
 }

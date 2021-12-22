@@ -15,6 +15,7 @@ import Checkout from '../screens/Checkout';
 export default function Paypal(props) {
     const paypal = useRef();
 
+
     useEffect(() => {
         const frontEndLogService = new FrontEndLogService();
         const initializeItem = (item, isFormula) => {
@@ -22,10 +23,9 @@ export default function Paypal(props) {
                 name: isFormula ? item.formulaByFkFormula.name : item.productByFkProduct.name,
                 unit_amount: {
                     currency_code: 'EUR',
-                    value: isFormula ? item.formulaByFkFormula.price : item.productByFkProduct.price
+                    value: isFormula ? parseFloat(item.formulaByFkFormula.price.toFixed(2)) : parseFloat(item.productByFkProduct.price.toFixed(2))
                 },
                 quantity: item.quantity,
-                description: isFormula ? item.formulaByFkFormula.description : item.productByFkProduct.description,
                 category:'PHYSICAL_GOODS'
             }
         }
@@ -41,11 +41,11 @@ export default function Paypal(props) {
             return {
                 amount: {
                     currency_code: 'EUR',
-                    value: cartEntity.totalPrice + Checkout.GET_DELIVERY_PRICE(),
+                    value: parseFloat((cartEntity.totalPrice + Checkout.GET_DELIVERY_PRICE()).toFixed(2)),
                     breakdown: {
                         item_total: {
                             currency_code: 'EUR',
-                            value: cartEntity.totalPrice
+                            value: parseFloat(cartEntity.totalPrice.toFixed(2))
                         },
                         shipping: {
                             currency_code: 'EUR',
@@ -62,6 +62,10 @@ export default function Paypal(props) {
             alert('Une erreur est survenue pendant le paiement. Vous n\'avez pas été débité.\nS\'il vous plaît, veuillez contacter un administrateur ou réessayer plus tard.');
         }
         window.paypal_sdk.Buttons({
+            //NOTE / INFO :
+            //TODO props is not in the dependancy array so if address changes, it won't be changed from the paypal POV. + Adding props to the dependency would cause
+            // the buttons to be rerendered, without the previous buttons being deleted. So for now, I just removed the props from the dependancy array and I don't care
+            // about having the wrong address in the paypal stuff.
             createOrder: (data, actions, err) => {
                 return actions.order.create({
                     intent: 'CAPTURE',
@@ -105,7 +109,8 @@ export default function Paypal(props) {
                 handleError(err);
             }
         }).render(paypal.current);
-    }, [props])
+        // eslint-disable-next-line
+    }, [])
 
     return (
         <div>

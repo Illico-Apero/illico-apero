@@ -298,7 +298,7 @@ export default class Home extends React.Component {
                                 this.state.formulas !== null ?   
                                 <div style= {{marginBottom:'5em'}}>
                                 {
-                                    <Grid container spacing={3}>
+                                    <Grid container>
                                     {
                                         this.state.formulas.map(
                                             /**

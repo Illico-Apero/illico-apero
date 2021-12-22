@@ -38,15 +38,15 @@ export default class CartService {
      * @param {Function} callback 
      */
     getAmountIncart(userEntity, jwt, callback) {
-        Http.get(configuration.server.baseUrl + configuration.endpoints.getAmountInCart + "/" + userEntity.idUser + "/" + userEntity.databaseToken, jwt, (data) => {
+        Http.get(configuration.server.baseUrl + configuration.endpoints.getAmountInCart + '/' + userEntity.idUser + '/' + userEntity.databaseToken, jwt, (data) => {
             callback(data);
-        })
+        });
     }
 
     getCart(userEntity, jwt, callback) {
-        Http.get(configuration.server.baseUrl + configuration.endpoints.getCart + "/" + userEntity.idUser + "/" + userEntity.databaseToken, jwt, (data) => {
+        Http.get(configuration.server.baseUrl + configuration.endpoints.getCart + '/' + userEntity.idUser + '/' + userEntity.databaseToken, jwt, (data) => {
             callback(data);
-        })
+        });
     }
 
     /**
@@ -57,8 +57,14 @@ export default class CartService {
      * @param {Function} callback 
      */
     saveCart(userEntity, cartEntity, jwt, callback) {
-        Http.postWithJwt(configuration.server.baseUrl + configuration.endpoints.saveCart + "/" + userEntity.idUser + "/" + userEntity.databaseToken, JSON.stringify(cartEntity), jwt, (data) => {
+        Http.postWithJwt(configuration.server.baseUrl + configuration.endpoints.saveCart + '/' + userEntity.idUser + '/' + userEntity.databaseToken, JSON.stringify(cartEntity), jwt, (data) => {
             callback(data);
-        })
+        });
+    }
+
+    clearCart(userEntity, cartEntity, jwt, callback) {
+        Http.postWithJwt(configuration.server.baseUrl + configuration.endpoints.clearCart + '/' + userEntity.idUser + '/' + userEntity.databaseToken, JSON.stringify(cartEntity), jwt, (data) => {
+            callback(data);
+        });
     }
 }
