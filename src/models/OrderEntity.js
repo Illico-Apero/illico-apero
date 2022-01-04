@@ -17,17 +17,18 @@ export default class OrderEntity {
      * @param {Array<OrderProductsEntity>} orderProductsByIdOrder 
      * @param {Array<OrderFormulasEntity>} orderFormulasByIdOrder
      * @param {StatusEntity} statusByFkStatus
-     * @param {Array<UserPersonalInformationsEntity>} userPersonalInformationsByFkUserPersonalInformations
+     * @param {UserPersonalInformationsEntity} userPersonalInformationsByFkUserPersonalInformations
      */
-    constructor(idOrder, fkStatus, fkUserPersonalInformation, stripePaymentIntentId, totalPrice, userRemark,
-                orderProductsByIdOrder, statusByFkStatus, userPersonalInformationsByFkUserPersonalInformations) {
+    constructor(idOrder, fkStatus, fkUserPersonalInformation, totalPrice, userRemark, createdAt,
+                orderProductsByIdOrder, orderFormulasByIdOrder, statusByFkStatus, userPersonalInformationsByFkUserPersonalInformations) {
         this.idOrder = idOrder;
         this.fkStatus = fkStatus;
         this.fkUserPersonalInformation = fkUserPersonalInformation;
-        this.stripePaymentIntentId = stripePaymentIntentId;
         this.totalPrice = totalPrice;
         this.userRemark = userRemark;
+        this.createdAt = createdAt;
         this.orderProductsByIdOrder = orderProductsByIdOrder;
+        this.orderFormulasByIdOrder = orderFormulasByIdOrder;
         this.statusByFkStatus = statusByFkStatus;
         this.userPersonalInformationsByFkUserPersonalInformations = userPersonalInformationsByFkUserPersonalInformations;
     }

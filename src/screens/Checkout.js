@@ -215,7 +215,6 @@ export default class Checkout extends React.Component {
 ///////////////////////////////// PAYPAL & PAYMENT ///////////////////////////////////////////////////////////////////////////////
 
     handleOrderCreation(paypalId) {
-        console.log('order');
         Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
             this.orderService.placeOrder(this.state.userEntity, paypalId, this.state.userRemark ? this.state.userRemark : '', (data) => {
                 console.log("Order placed");
@@ -530,18 +529,6 @@ export default class Checkout extends React.Component {
                     :
                     <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
                 }
-                {
-                    this.state.paymentError ?
-                    <div>
-                        <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
-                            Une erreur est survenue pendant le paiement.
-                            Vous n'avez pas été débité. Veuillez contacter le support
-                            ou patienter et réessayer plus tard.
-                        </Alert> 
-                    </div>
-                    :
-                    ''
-                }
                 <div id='utils'>
                     <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="address-change-title" open={this.state.isAddressDialogOpen}>
                         <DialogTitle id="address-change-title">Confirmer le changement d'addresse ?</DialogTitle>
@@ -556,6 +543,18 @@ export default class Checkout extends React.Component {
                         {this.state.paymentSuccessfulAlertText}
                     </MuiAlert>
                 </Snackbar>
+                {
+                    this.state.paymentError ?
+                    <div id='payment-error'>
+                        <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                            Une erreur est survenue pendant le paiement.
+                            Vous n'avez pas été débité. Veuillez contacter le support
+                            ou patienter et réessayer plus tard.
+                        </Alert> 
+                    </div>
+                    :
+                    ''
+                }
 
                 </div>
             </>
