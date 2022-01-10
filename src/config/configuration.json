@@ -28,5 +28,6 @@
         "getStore":"store/get-store",
         "getIfValid":"promotion/get-if-valid"
     },
-    "debug":true
+    "debug":true,
+    "maintenance":false
 }

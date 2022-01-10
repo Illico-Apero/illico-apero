@@ -17,6 +17,7 @@ import StoreEntity from '../models/StoreEntity';
 import ApiResponse from '../models/api/ApiResponse';
 import { CircularProgress } from '@material-ui/core';
 import configuration from '../config/configuration.json'
+import { Alert } from '@material-ui/lab';
 
 export default class Landing extends React.Component {
 
@@ -26,6 +27,7 @@ export default class Landing extends React.Component {
             loaded: false,
             isUserLoggedIn: false,
             opened:false,
+            closedProgrammatically:false,
             hours:[],
             days:[]
         }
@@ -38,7 +40,8 @@ export default class Landing extends React.Component {
             this.storeService.isStoreOpened( (data) => {
                 if(data.status !== ApiResponse.GET_ERROR()) {
                     if(data.status === ApiResponse.GET_WARNING()) {
-                        console.warn(data.status);
+                        console.warn("Store closed programmatically");
+                        this.setState({closedProgrammatically:true});
                     }
                     this.setState({opened: data.response}, () => {
                         this.storeService.getStore( 
@@ -107,8 +110,22 @@ export default class Landing extends React.Component {
                                 entre <b>{this.state.hours[0]} et {this.state.hours[1]}</b> du <b>{this.state.days[0]} au {this.state.days[1]}</b>
                         </Typography>
                         { // displays a green or red alert. 
-                            this.state.opened || configuration.debug ?
+                            (this.state.opened || configuration.debug) && !this.state.closedProgrammatically ?
                             <Opened/> : 
+                            this.state.closedProgrammatically ?
+                            <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                Les commandes sont fermées de manière exceptionnelle. Impossible de passer commande pour l'instant.
+                                Suivez-nous sur nos réseaux sociaux pour plus d'informations :
+                                <Typography variant='body1' style={{textAlign:'center'}}>
+                                <br/>
+                                <a  href='https://www.facebook.com/illico.apero.dijon'>Facebook</a>
+                                <br/>
+                                <br/>
+                                <a  href='https://www.instagram.com/illico.apero.dijon/?hl=fr'>Instagram</a>
+                                </Typography>
+                            </Alert> 
+                            /*TODO : Refactor with a component (3 code duplicates) */
+                            :
                             <Closed/>
                         }
 

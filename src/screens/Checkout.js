@@ -55,6 +55,7 @@ export default class Checkout extends React.Component {
             paymentSuccessfulAlertText:'Paiement effectué avec succès. Votre commande arrive 🔥🍻💥 !',
             paymentError:false,
             opened:false,
+            closedProgrammatically:false,
             loadingPayment:false
         }
 
@@ -79,7 +80,9 @@ export default class Checkout extends React.Component {
                             this.storeService.isStoreOpened( (data) => {
                                 if(data.status !== ApiResponse.GET_ERROR()) {
                                     if(data.status === ApiResponse.GET_WARNING()) { // closed manually
-                                        console.warn(data.status);
+                                      console.warn("Store closed programmatically");
+                                      this.setState({closedProgrammatically:true});
+                                        // TODO Show that site is disabled (fermeture exceptionnelle) : DISABLE BUTTON / DO NOT ALLOW TO PAY (paypal visible = false / whole page with warning above)
                                     }
                                     this.setState({opened: data.response}, () => {
                                         this.setState({loaded:true});
@@ -100,8 +103,8 @@ export default class Checkout extends React.Component {
             this.retrieveQuantityInCart(() => {
                 this.storeService.isStoreOpened( (data) => {
                     if(data.status !== ApiResponse.GET_ERROR()) {
-                        if(data.status === ApiResponse.GET_WARNING()) { // closed manually
-                            console.warn(data.status);
+                        if(data.status === ApiResponse.GET_WARNING()) { // TODO closed manually Show that site is disabled (fermeture exceptionnelle)
+                          console.warn("Store closed programmatically");
                         }
                         this.setState({opened: data.response}, () => {
                             this.setState({loaded:true});
@@ -226,7 +229,7 @@ export default class Checkout extends React.Component {
           color: '#fff',
         }
         return (
-            this.state.opened || configuration.debug ?
+            (this.state.opened || configuration.debug) && !this.state.closedProgrammatically ?
             <>
                 <IllicoSimpleAppBar to={previousPageRedirection} title='Livraison et paiement'/>
                 {
@@ -512,6 +515,19 @@ export default class Checkout extends React.Component {
 
                 </div>
             </>
+            :
+            this.state.closedProgrammatically ? 
+            <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+              Les commandes sont fermées de manière exceptionnelle. Impossible de passer commande pour l'instant.
+              Suivez-nous sur nos réseaux sociaux pour plus d'informations :
+              <Typography variant='body1' style={{textAlign:'center'}}>
+              <br/>
+              <a  href='https://www.facebook.com/illico.apero.dijon'>Facebook</a>
+              <br/>
+              <br/>
+              <a  href='https://www.instagram.com/illico.apero.dijon/?hl=fr'>Instagram</a>
+              </Typography>
+              </Alert> 
             :
             <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
                 Nous sommes actuellement fermés 🥺. Revenez plus tard !

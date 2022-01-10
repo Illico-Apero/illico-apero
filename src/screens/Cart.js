@@ -52,6 +52,7 @@ export default class Cart extends React.Component {
             /** @type {RemovalInformations} removalInformations */
             removalInformations:null,
             opened:false,
+            closedProgrammatically:false,
             hours:[],
             days:[],
             addressKey:true,
@@ -133,7 +134,8 @@ export default class Cart extends React.Component {
                             this.storeService.isStoreOpened( (data) => {
                                 if(data.status !== ApiResponse.GET_ERROR()) {
                                     if(data.status === ApiResponse.GET_WARNING()) {
-                                        console.warn(data.status);
+                                        console.warn("Store closed programmatically");
+                                        this.setState({closedProgrammatically:true});
                                     }
                                     this.setState({opened: data.response}, () => {
                                         this.storeService.getStore( 
@@ -430,8 +432,8 @@ export default class Cart extends React.Component {
                                 :
                                 <div id="cart">
                                     {
-                                      this.state.opened || configuration.debug ? 
-                                        <div id="checkout" style={{marginTop:'2em', marginBottom:'1em'}}>
+                                      (this.state.opened || configuration.debug) && !this.state.closedProgrammatically ? 
+                                        <div id="infos" style={{marginTop:'2em', marginBottom:'1em'}}>
 
                                         <div id='address'>
                                           <div id='address-display'>
@@ -523,12 +525,22 @@ export default class Cart extends React.Component {
                                                 </Button>
                                             </div>
                                             </Card>
-                                        <div id='debug'>
-                                            /!\ debug enabled /!\
                                         </div>
-                                        </div>
-                                        :                                                
-                                         <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
+                                        :
+                                        this.state.closedProgrammatically ?                                             
+                                        <Alert severity="error" elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                          Les commandes sont fermées de manière exceptionnelle. Impossible de passer commande pour l'instant.
+                                          Suivez-nous sur nos réseaux sociaux pour plus d'informations :
+                                          <Typography variant='body1' style={{textAlign:'center'}}>
+                                          <br/>
+                                          <a  href='https://www.facebook.com/illico.apero.dijon'>Facebook</a>
+                                          <br/>
+                                          <br/>
+                                          <a  href='https://www.instagram.com/illico.apero.dijon/?hl=fr'>Instagram</a>
+                                          </Typography>
+                                        </Alert> 
+                                        :
+                                        <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
                                             Nous sommes actuellement fermés 🥺. Revenez plus tard !
                                             Nous sommes ouvert entre entre <b>{this.state.hours[0]} et {this.state.hours[1]}</b> du <b>{this.state.days[0]} au {this.state.days[1]}</b>
                                         </Alert> 
