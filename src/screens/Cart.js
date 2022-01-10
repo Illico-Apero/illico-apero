@@ -1,6 +1,6 @@
 import React from 'react'
 import { Alert } from '@material-ui/lab';
-import { CircularProgress, Dialog, DialogActions, Button, DialogTitle, Snackbar, Typography, Card } from '@material-ui/core';
+import { CircularProgress, Dialog, DialogActions, Button, DialogTitle, Snackbar, Typography, Card, TextField, FormControl } from '@material-ui/core';
 import MuiAlert from '@material-ui/lab/Alert';
 
 import FrontEndLogService from '../network/services/FrontEndLogService';
@@ -25,6 +25,9 @@ import StoreService from '../network/services/StoreService';
 
 import configuration from '../config/configuration.json'
 import { Link } from 'react-router-dom';
+import PromotionService from '../network/services/PromotionService';
+import IllicoAddresses from '../components/IllicoAddresses';
+import AddressService from '../network/services/AddressService';
 
 
 export default class Cart extends React.Component {
@@ -48,13 +51,46 @@ export default class Cart extends React.Component {
             isRemoveItemDialogOpen:false,
             /** @type {RemovalInformations} removalInformations */
             removalInformations:null,
-            opened:false
+            opened:false,
+            hours:[],
+            days:[],
+            addressKey:true,
+            addressError:false,
+            addressHelper:'',
+            isAddressDialogOpen:false,
+            /** @type {AddressEntity} changedAddress */
+            changedAddress:null,
+            promotionCodeTextField:'',
+            appliedPromotionCode:null,
+            radius: {
+              distance: 4000
+            },
+            showNoPromoCodeValidated:false,
+            showNoPromoCodeValidatedText:'Aucun code promo n\'a été entré 😪',
+            showPromoCodeInvalid:false,
+            showPromoCodeInvalidText:'Le code promo saisi n\'est pas valide 😕 !',
+            showPromoCodeExpired:false,
+            showPromoCodeExpiredText:'Le code promo saisi a expiré 😓',
+            showPromoCodeApplied:false,
+            showPromoCodeAppliedText:'Le code promo a été appliqué avec succès 😍 ! ',
+            showPromoCodeError:false,
+            showPromoCodeErrorText:'Une erreur est survenue durant l\'ajout du code promo 🥺. Veuillez en faire part à notre équipe !'
         }
         if(configuration.debug) console.warn('app is in debug mode');
+
+        this.handleAddressChange = this.handleAddressChange.bind(this);
         this.cartService = new CartService();
         this.frontEndLogService = new FrontEndLogService();
         this.onQuantityChange = this.onQuantityChange.bind(this);
         this.storeService = new StoreService();
+        this.promotionService = new PromotionService();
+        this.addressService = new AddressService();
+        this.addressService.getDeliveryRadius(
+          /** @param {Radius} data */
+          (data) => {
+              let radius = this.state.radius;
+              radius["distance"] = data.radius;
+          });
     }
 
     //TODO : Code redundancy between Profile.js, Cart.js, Category.js, Home.js
@@ -100,7 +136,20 @@ export default class Cart extends React.Component {
                                         console.warn(data.status);
                                     }
                                     this.setState({opened: data.response}, () => {
-                                        this.setState({loaded:true});
+                                        this.storeService.getStore( 
+                                            /**
+                                             * 
+                                             * @param {StoreEntity} data 
+                                             */
+                                            (data) => { // TODO : code duplicate with landing.js
+                                            if(data.status === ApiResponse.GET_SUCCESS()) {
+                                                this.state.hours.push(data.response.openHour.slice(0, -3));
+                                                this.state.hours.push(data.response.closeHour.slice(0, -3));
+                                                this.state.days.push(data.response.daysAsList[0]);
+                                                this.state.days.push(data.response.daysAsList[data.response.daysAsList.length - 1]);
+                                                this.setState({loaded:true});
+                                            }
+                                        })
                                     });
                                 }
                                 else {
@@ -208,7 +257,125 @@ export default class Cart extends React.Component {
     handleRemoveFromCartCancel() {
         this.setState({isRemoveItemDialogOpen : false});
         IllicoAudio.playUiLockAudio();
-    }    
+    }
+    handleAddressChange(event, value) {
+      if(value != null) {
+          let approxDistanceFromCenter = value.approxMetersFromMainStorageCenter;
+          if(approxDistanceFromCenter > this.state.radius.distance) {
+              // Address is changed but invalid. No dialog is shown and error message appears.
+              IllicoAudio.playAlertAudio();
+              this.setState({addressError:true});
+              this.setState({addressHelper:'Cette addresse n\'est pas éligible !'});
+              this.setState({addressKey:!this.state.addressKey}) // just negates the key so that address is reset.
+          }
+          else if(approxDistanceFromCenter < this.state.radius.distance) {
+              // Address is changed and is valid. Asks for user confirmation by showing up a dialog.
+              this.setState({addressError:false});
+              this.setState({addressHelper:''});
+              this.setState({changedAddress:value}, () => {
+                  this.setState({isAddressDialogOpen:true});
+              })
+          }
+      }
+    }
+    handleAddressChangeAccept() {
+        if(this.state.changedAddress) {
+            Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
+                this.setState({isAddressDialogOpen:false});
+                IllicoAudio.playUiLockAudio();
+                this.addressService.changeAddress(this.state.userEntity, this.state.changedAddress, /** @param {ApiResponse} response */ (response) => {
+                    if(response.status === ApiResponse.GET_SUCCESS()) {
+                        let userEntityCopy = this.state.userEntity;
+                        userEntityCopy.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress = this.state.changedAddress;
+                        this.setState({userEntity:userEntityCopy});
+                    }
+                    else {
+                        this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1, "Error occured while trying to change address. Check server logs : " + response.response);
+                    }
+                });
+            });
+        }
+        else {
+            this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1, "The state.changedAddress object was null when trying to change address during checkout.");
+        }
+    }
+    handleAddressChangeCancel() {
+        this.setState({isAddressDialogOpen:false});
+        this.setState({addressKey:!this.state.addressKey}) // just negates the key so that address is reset.
+        IllicoAudio.playUiLockAudio();
+    }
+    handlePromotionChange(value) {
+      this.setState({ promotionCodeTextField:value })
+    }
+    handleCloseShowNoPromo(event, reason) {
+      if (reason === 'clickaway') {
+        return;
+      }
+    this.setState({ showNoPromoCodeValidated:false });
+    }
+    handleCloseShowPromoCodeExpired(event, reason) {
+      if (reason === 'clickaway') {
+        return;
+      }
+      this.setState({showPromoCodeExpired: false});
+    }
+    handleCloseShowPromoCodeInvalid(event, reason) {
+      if (reason === 'clickaway') {
+        return;
+      }
+      this.setState({showPromoCodeInvalid: false});
+    }
+    handleCloseShowPromoCodeApplied(event, reason) {
+      if (reason === 'clickaway') {
+        return;
+      }
+      this.setState({showPromoCodeApplied: false});
+    }
+    handleCloseShowPromoCodeError(event, reason) {
+      if (reason === 'clickaway') {
+        return;
+      }
+      this.setState({showPromoCodeError: false});
+    }
+
+    applyPromotionCode() {
+      if(this.state.promotionCodeTextField !== '') {
+        Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
+          this.promotionService.getIfValid(this.state.promotionCodeTextField, this.state.userEntity.jwt, (data) => {
+            if(data.status === ApiResponse.GET_ERROR()) {
+              this.frontEndLogService.saveLog(this.state.userEntity !== null ? this.state.userEntity.idUser : 0, 'Saisie de code promo invalide : ' + this.state.promotionCodeTextField);
+              IllicoAudio.playAlertAudio();
+              this.setState({ showPromoCodeInvalid:true });
+            }
+            else if(data.status === ApiResponse.GET_SUCCESS()) {
+              this.cartService.applyPromotion(this.state.userEntity, data.response, (cartResponse) => {
+                if(cartResponse.status === ApiResponse.GET_SUCCESS()) {
+                  IllicoAudio.playRegisterOrLogInAudio();
+                  this.setState({ showPromoCodeApplied: true});
+                  this.setState({ cartEntity: cartResponse.response });
+                }
+                else if(cartResponse.status === ApiResponse.GET_WARNING()) {
+                  IllicoAudio.playAlertAudio();
+                  this.setState({ showPromoCodeExpired: true });
+                }
+                else {
+                  IllicoAudio.playAlertAudio();
+                  this.setState({ showPromoCodeError: true });
+                  this.frontEndLogService.saveLog(this.state.userEntity.idUser, 'Could not apply promo code : ' + JSON.stringify(cartResponse));
+                }
+              })
+              //TODO : Popup, apply promotion code on order (visual) + init this.state.appliedPromotionCode (that will apply promotion on server side when placing order).
+      
+            }
+          });
+        });
+      }
+      else {
+        IllicoAudio.playAlertAudio();
+        this.setState({ showNoPromoCodeValidated:true });
+      }
+    }
+
     render() {
         const loginRedirectState = {
             pathname: '/login',
@@ -226,7 +393,7 @@ export default class Cart extends React.Component {
         }
         const checkoutRootStyle = {
             display:'flex',
-            width:200,
+            width:180,
             marginRight:'auto',
             marginLeft:'auto',
             marginBottom:'2em',
@@ -237,8 +404,6 @@ export default class Cart extends React.Component {
         if(this.state.opened) buttonDisabled = false;
         if(configuration.debug) buttonDisabled = false;
         return (
-            
-
             this.state.loaded ?
                 <>
                     <IllicoTopNavigation title='Panier' backUrl='/profile' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
@@ -264,31 +429,110 @@ export default class Cart extends React.Component {
                                 </Alert> 
                                 :
                                 <div id="cart">
-                                    <div id="checkout" style={{marginTop:'2em', marginBottom:'1em'}}>
-                                        <Card elevation={3} style={checkoutRootStyle}>
-                                        <div style={{paddingRight:'0.5em', marginTop:'10px'}}>
-                                            <Typography>
-                                            Total
+                                    {
+                                      this.state.opened || configuration.debug ? 
+                                        <div id="checkout" style={{marginTop:'2em', marginBottom:'1em'}}>
+
+                                        <div id='address'>
+                                          <div id='address-display'>
+                                          {
+                                            this.state.userEntity !== null &&
+                                            this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation !== null
+                                            && this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress !== null ?
+                                            <div id='address-display'>
+                                            <Typography variant='body1' id='identity' style={{fontSize:'14px'}}>
+                                              Votre addresse de livraison :
                                             </Typography>
-                                            <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
-                                                {this.state.cartEntity.totalPrice.toFixed(2)}€
-                                            </Typography>
-                                        </div>
-                                        <div style={{marginLeft:'1em'}}>
-                                            <Button disabled={buttonDisabled} component={Link} to={checkoutRedirectState} onClick={() => IllicoAudio.playTapAudio()} variant='contained' color='primary' style={{fontWeight:'bold'}}>
-                                                Livraison et paiement
-                                            </Button>
-                                        </div>
-                                        </Card>
-                                        {
-                                            this.state.opened ?
-                                            ''
+                                                <Typography variant='body1' id='identity' style={{fontSize:'12px'}}>
+                                                {
+                                                    this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.firstname + ' ' +
+                                                    this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.surname.toUpperCase()
+                                                }
+                                                </Typography>
+                                                <Typography variant='body1' id='postal-address' style={{fontSize:'12px'}}>
+                                                {
+                                                  this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.streetNumber + ' ' +
+                                                  this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.street + ', ' +      
+                                                  this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.postalCode + ' ' +
+                                                  this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.city
+                                                }
+                                                </Typography>
+                                                <Typography variant='body1' id='phone' style={{fontSize:'12px'}}>
+                                                {
+                                                    this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.phone
+                                                }
+                                                </Typography>
+                                            </div>
                                             :
-                                            <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
-                                                Nous sommes actuellement fermés 🥺. Revenez plus tard !
-                                            </Alert> 
-                                        }
-                                    </div>
+                                            ''
+                                          }
+                                          </div>
+                                          <div id='address-change'>
+                                            <Typography variant='body1' style={{ marginTop:'0.3em', color:'#b26a00', marginBottom:'0.5em'}}>
+                                                  Changer d'addresse :
+                                              </Typography>
+                                              <FormControl style={{width:'300px', marginBottom:'2em'}}>
+                                                  <IllicoAddresses key={this.state.addressKey} addressHelper={this.state.addressHelper} addressError={this.state.addressError} onChange={this.handleAddressChange} />
+                                              </FormControl>
+                                          </div>
+                                        </div>
+                                        <div id='promotion'>
+                                          <Typography variant='body1' style={{ marginTop:'0.3em', color:'#b26a00', marginBottom:'0.5em'}}>
+                                            Code promotionnel
+                                          </Typography>
+                                          <TextField id="promotion-code" label="Vous avez un code promo ?" variant="outlined" color="secondary" value={this.state.promotionCodeTextField}
+                                          onChange={(event) => this.handlePromotionChange(event.target.value)} />
+
+                                          <div id='confirm-promotion' style={{marginTop:'1em'}}>
+                                            <Button onClick={() => this.applyPromotionCode() } variant='contained' color='primary' style={{fontWeight:'bold', marginBottom:'1em'}}>
+                                                Appliquer mon code !
+                                            </Button>
+                                          </div>
+                                          {
+                                              this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
+                                            <div style={{marginTop:'1.5em'}}>
+                                              <Alert severity='success' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                                Le code promotionnel {this.state.cartEntity.promotionByFkPromotion.promotionCode} de {this.state.cartEntity.promotionByFkPromotion.reductionInPercents}% est appliqué !
+                                              </Alert> 
+                                            </div>
+                                            :
+                                            ''
+                                          }
+                                        </div>
+                                            <Typography variant='body1' style={{ marginTop:'0.3em', color:'#b26a00', marginBottom:'0.5em'}}>
+                                                Paiement
+                                             </Typography>
+                                            <Card elevation={3} style={checkoutRootStyle}>
+                                            <div style={{paddingRight:'0.5em', marginTop:'10px'}}>
+                                                <Typography>
+                                                Total
+                                                </Typography>
+                                                <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
+                                                  {
+                                                    this.state.cartEntity !== null && this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
+                                                    this.state.cartEntity.totalPriceWithPromotion.toFixed(2) + '€'
+                                                    :
+                                                    this.state.cartEntity.totalPrice.toFixed(2) + '€'
+                                                  }
+                                                </Typography>
+                                            </div>
+                                            <div style={{marginLeft:'1em'}}>
+
+                                                <Button disabled={buttonDisabled} component={Link} to={checkoutRedirectState} onClick={() => IllicoAudio.playTapAudio()} variant='contained' color='primary' style={{fontWeight:'bold'}}>
+                                                    Passer au paiement
+                                                </Button>
+                                            </div>
+                                            </Card>
+                                        <div id='debug'>
+                                            /!\ debug enabled /!\
+                                        </div>
+                                        </div>
+                                        :                                                
+                                         <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
+                                            Nous sommes actuellement fermés 🥺. Revenez plus tard !
+                                            Nous sommes ouvert entre entre <b>{this.state.hours[0]} et {this.state.hours[1]}</b> du <b>{this.state.days[0]} au {this.state.days[1]}</b>
+                                        </Alert> 
+                                    }
                                     <div id='formulas'> {
                                         this.state.cartEntity.cartFormulasByIdCart !== null &&
                                         this.state.cartEntity.cartFormulasByIdCart.length > 0 &&
@@ -350,10 +594,17 @@ export default class Cart extends React.Component {
                             }
                         </div>
                         :
-                        <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
+                        <IllicoAskForConnection loginRedirectState={loginRedirectState} history={this.props.history}/>
                     }
                     <IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart}/>
                     <div id='dialogs'>
+                    <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="address-change-title" open={this.state.isAddressDialogOpen}>
+                        <DialogTitle id="address-change-title">Confirmer le changement d'addresse ?</DialogTitle>
+                        <DialogActions>
+                            <Button variant='contained' color='primary' onClick={() => this.handleAddressChangeCancel()}> Annuler </Button>
+                            <Button variant='contained' color='secondary' onClick={() => this.handleAddressChangeAccept()} autoFocus> Confirmer </Button>
+                        </DialogActions>
+                    </Dialog>
                         <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isQuantityUpdatedAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)}>
                             <MuiAlert onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)} severity="success">
                                 {this.state.quantityUpdatedText}
@@ -366,6 +617,35 @@ export default class Cart extends React.Component {
                             </MuiAlert>
                         </Snackbar>
 
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.showNoPromoCodeValidated} autoHideDuration={2000} onClose={(event, reason) => this.handleCloseShowNoPromo(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseShowNoPromo(event, reason)} severity='error'>
+                                {this.state.showNoPromoCodeValidatedText}
+                            </MuiAlert>
+                        </Snackbar>
+                        
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.showPromoCodeInvalid} autoHideDuration={3000} onClose={(event, reason) => this.handleCloseShowPromoCodeInvalid(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseShowPromoCodeInvalid(event, reason)} severity='error'>
+                                {this.state.showPromoCodeInvalidText}
+                            </MuiAlert>
+                        </Snackbar>
+
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.showPromoCodeExpired} autoHideDuration={3000} onClose={(event, reason) => this.handleCloseShowPromoCodeExpired(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseShowPromoCodeExpired(event, reason)} severity='warning'>
+                                {this.state.showPromoCodeExpiredText}
+                            </MuiAlert>
+                        </Snackbar>
+
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.showPromoCodeApplied} autoHideDuration={3000} onClose={(event, reason) => this.handleCloseShowPromoCodeApplied(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseShowPromoCodeApplied(event, reason)} severity='success'>
+                                {this.state.showPromoCodeAppliedText}
+                            </MuiAlert>
+                        </Snackbar>
+
+                        <Snackbar style={{marginBottom:'3.5em'}} open={this.state.showPromoCodeError} autoHideDuration={10000} onClose={(event, reason) => this.handleCloseShowPromoCodeError(event, reason)}>
+                            <MuiAlert onClose={(event, reason) => this.handleCloseShowPromoCodeError(event, reason)} severity='error'>
+                                {this.state.showPromoCodeErrorText}
+                            </MuiAlert>
+                        </Snackbar>
 
                         <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="delete-cart-item-title" open={this.state.isRemoveItemDialogOpen}>
                             <DialogTitle id="delete-cart-item-title">Supprimer l'article du panier ?</DialogTitle>

@@ -1,13 +1,14 @@
 import React from 'react'
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
 import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
-import { Badge, Card, CardContent, CardMedia, Dialog, DialogActions, DialogTitle, FormControl, Grid, Button, Typography, ListItemText, List, TableContainer, Paper, TableHead, TableRow, TableCell, Table, TextareaAutosize, CircularProgress, Snackbar } from '@material-ui/core';
+import { Badge, Card, CardContent, CardMedia, Dialog, DialogActions, DialogTitle, FormControl, Grid, Button, Typography, ListItemText, List, TableContainer, Paper, TableHead, TableRow, TableCell, Table, TextareaAutosize, CircularProgress, Snackbar, TextField } from '@material-ui/core';
 import CartEntity from '../models/CartEntity';
 import Utils from '../utils/Utils';
 import ApiResponse from '../models/api/ApiResponse';
 import CartService from '../network/services/CartService';
 import FrontEndLogService from '../network/services/FrontEndLogService';
 import IllicoAskForConnection from '../components/IllicoAskForConnection';
+import Backdrop from '@material-ui/core/Backdrop';
 import { Alert } from '@material-ui/lab';
 import IllicoPriceRecapBottomBar from '../components/IllicoPriceRecapBottomBar';
 import UserEntity from '../models/UserEntity';
@@ -22,6 +23,7 @@ import Paypal from '../components/Paypal';
 import StoreService from '../network/services/StoreService';
 import configuration from '../config/configuration.json'
 import MuiAlert from '@material-ui/lab/Alert';
+import PromotionService from '../network/services/PromotionService';
 
 const DELIVERY_PRICE = 2.99;
 
@@ -47,26 +49,17 @@ export default class Checkout extends React.Component {
             /** @type {CartEntity} cartEntity */
             cartEntity:null,
             cartLoadingError:false,
-            addressError:false,
-            addressHelper:'',
-            isAddressDialogOpen:false,
-            addressKey:true,
-            /** @type {AddressEntity} changedAddress */
-            changedAddress:null,
             deliveryPrice:DELIVERY_PRICE,
             userRemark:'',
             paymentSuccessfulAlertOpen:false,
             paymentSuccessfulAlertText:'Paiement effectué avec succès. Votre commande arrive 🔥🍻💥 !',
             paymentError:false,
             opened:false,
-            radius: {
-                distance: 4000
-            }
+            loadingPayment:false
         }
 
         if(configuration.debug) console.warn('app is in debug mode');
 
-        this.handleAddressChange = this.handleAddressChange.bind(this);
         this.handleOrderCreation = this.handleOrderCreation.bind(this);
         this.paymentPlacedCallback = this.paymentPlacedCallback.bind(this);
         this.cartService = new CartService();
@@ -74,14 +67,9 @@ export default class Checkout extends React.Component {
         this.addressService = new AddressService();
         this.orderService = new OrderService();
         this.storeService = new StoreService();
-        this.addressService.getDeliveryRadius(
-        /** @param {Radius} data */
-        (data) => {
-            let radius = this.state.radius;
-            radius["distance"] = data.radius;
-        });
     }
-    componentDidMount() { //TODO : CODE REDUNDANCY WITH PROFILE.JS
+    componentDidMount() { //TODO : CODE REDUNDANCY WITH PROFILE.JS + huge refactor to do.
+      // we handle two cases, one with user non initialized in memory and case with user initialized. We then do the exact same thing. Must be refactored
         if(!this.state.isUserLoggedIn || this.state.userEntity === null) {
             this.setState({userEntity: JSON.parse(localStorage.getItem('userEntity'))}, () => {
                 this.setState({isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn'))}, () => {
@@ -90,7 +78,7 @@ export default class Checkout extends React.Component {
                             this.retrieveCart();
                             this.storeService.isStoreOpened( (data) => {
                                 if(data.status !== ApiResponse.GET_ERROR()) {
-                                    if(data.status === ApiResponse.GET_WARNING()) {
+                                    if(data.status === ApiResponse.GET_WARNING()) { // closed manually
                                         console.warn(data.status);
                                     }
                                     this.setState({opened: data.response}, () => {
@@ -112,7 +100,7 @@ export default class Checkout extends React.Component {
             this.retrieveQuantityInCart(() => {
                 this.storeService.isStoreOpened( (data) => {
                     if(data.status !== ApiResponse.GET_ERROR()) {
-                        if(data.status === ApiResponse.GET_WARNING()) {
+                        if(data.status === ApiResponse.GET_WARNING()) { // closed manually
                             console.warn(data.status);
                         }
                         this.setState({opened: data.response}, () => {
@@ -156,52 +144,6 @@ export default class Checkout extends React.Component {
     getUserIdIfLoggedInOtherwiseMinus1() { //TODO : refactor, redundant
         return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
     }
-    handleAddressChange(event, value) {
-        if(value != null) {
-            let approxDistanceFromCenter = value.approxMetersFromMainStorageCenter;
-            if(approxDistanceFromCenter > this.state.radius.distance) {
-                // Address is changed but invalid. No dialog is shown and error message appears.
-                IllicoAudio.playAlertAudio();
-                this.setState({addressError:true});
-                this.setState({addressHelper:'Cette addresse n\'est pas éligible !'});
-                this.setState({addressKey:!this.state.addressKey}) // just negates the key so that address is reset.
-            }
-            else if(approxDistanceFromCenter < this.state.radius.distance) {
-                // Address is changed and is valid. Asks for user confirmation by showing up a dialog.
-                this.setState({addressError:false});
-                this.setState({addressHelper:''});
-                this.setState({changedAddress:value}, () => {
-                    this.setState({isAddressDialogOpen:true});
-                })
-            }
-        }
-    }
-    handleAddressChangeAccept() {
-        if(this.state.changedAddress) {
-            Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
-                this.setState({isAddressDialogOpen:false});
-                IllicoAudio.playUiLockAudio();
-                this.addressService.changeAddress(this.state.userEntity, this.state.changedAddress, /** @param {ApiResponse} response */ (response) => {
-                    if(response.status === ApiResponse.GET_SUCCESS()) {
-                        let userEntityCopy = this.state.userEntity;
-                        userEntityCopy.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress = this.state.changedAddress;
-                        this.setState({userEntity:userEntityCopy});
-                    }
-                    else {
-                        this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1, "Error occured while trying to change address. Check server logs : " + response.response);
-                    }
-                });
-            });
-        }
-        else {
-            this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1, "The state.changedAddress object was null when trying to change address during checkout.");
-        }
-    }
-    handleAddressChangeCancel() {
-        this.setState({isAddressDialogOpen:false});
-        this.setState({addressKey:!this.state.addressKey}) // just negates the key so that address is reset.
-        IllicoAudio.playUiLockAudio();
-    }
     handleTextAreaChange(event) {
         this.setState({userRemark:event.target.value});
     }
@@ -211,34 +153,39 @@ export default class Checkout extends React.Component {
         }
         this.setState({paymentSuccessfulAlertOpen : false});
     }
+    handleBackdropLoadingPaymentClose() {
+      this.setState({ loadingPayment:false });
+    }
+
 
 ///////////////////////////////// PAYPAL & PAYMENT ///////////////////////////////////////////////////////////////////////////////
-
     handleOrderCreation(paypalId) {
+      this.setState({ loadingPayment: true }, () => {
         Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
-            this.orderService.placeOrder(this.state.userEntity, paypalId, this.state.userRemark ? this.state.userRemark : '', (data) => {
-                console.log("Order placed");
-                console.log(data);
-                this.setState({paymentSuccessfulAlertOpen:true});
-                Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
-                    this.cartService.clearCart(this.state.userEntity, this.state.cartEntity, this.state.userEntity.jwt, (data) => {
-                        IllicoAudio.playAddToCartAudio();
-                        console.log(data);
-                        setTimeout(() => {
-                            this.props.history.push("/profile"); // redirection 👌
-                        }, 1500); // waits for 2000ms
-                    });
-                });
-            });
+          this.orderService.placeOrder(this.state.userEntity, paypalId, this.state.userRemark ? this.state.userRemark : '', this.state.appliedPromotionCode, (data) => {
+              console.log("Order placed");
+              console.log(data);
+              this.setState({paymentSuccessfulAlertOpen:true});
+              Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
+                  this.cartService.clearCart(this.state.userEntity, this.state.cartEntity, this.state.userEntity.jwt, (data) => {
+                    this.setState({loadingPayment:false});
+                      IllicoAudio.playAddToCartAudio();
+                      console.log(data);
+                      setTimeout(() => {
+                          this.props.history.push("/profile"); // redirection 👌
+                      }, 1500); // waits for 2000ms
+                  });
+              });
+          });
         });
+      });
     }
     paymentPlacedCallback(payment) {
         if(payment !== null || payment !== undefined) {
             this.handleOrderCreation(payment.id);
-            console.log('checkout');
         }
         else {
-            this.setState({paymentError:true});
+            this.setState({ paymentError:true });
         }
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +220,10 @@ export default class Checkout extends React.Component {
                 backUrl:'/checkout',
                 slideDirection:'left',
             }
+        }
+        const backdrop = {
+          zIndex: 999,
+          color: '#fff',
         }
         return (
             this.state.opened || configuration.debug ?
@@ -346,22 +297,22 @@ export default class Checkout extends React.Component {
                                         this.state.userEntity !== null &&
                                         this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation !== null
                                         && this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress !== null ?
-
                                         <div id='address-display'>
-                                            <Typography variant='body1' id='identity'>
+                                            <Typography variant='body1' id='identity' style={{fontSize:'12px'}}>
                                             {
                                                 this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.firstname + ' ' +
                                                 this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.surname.toUpperCase()
                                             }
                                             </Typography>
-                                            <Typography variant='body1' id='postal-address'>
+                                            <Typography variant='body1' id='postal-address' style={{fontSize:'12px'}}>
                                             {
                                                 this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.streetNumber + ' ' +
-                                                this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.street + ', ' +                                 
+                                                this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.street + ', ' +      
+                                                this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.postalCode + ' ' +
                                                 this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.city
                                             }
                                             </Typography>
-                                            <Typography variant='body1' id='phone'>
+                                            <Typography variant='body1' id='phone' style={{fontSize:'12px'}}>
                                             {
                                                 this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.phone
                                             }
@@ -370,14 +321,6 @@ export default class Checkout extends React.Component {
                                         :
                                         ''
                                     }
-                                    <div id='address-change'>
-                                    <Typography variant='body1' style={{ marginTop:'0.3em', color:'#b26a00', marginBottom:'0.5em'}}>
-                                        Changer d'addresse :
-                                    </Typography>
-                                    <FormControl style={{width:'300px', marginBottom:'2em'}}>
-                                        <IllicoAddresses key={this.state.addressKey} addressHelper={this.state.addressHelper} addressError={this.state.addressError} onChange={this.handleAddressChange} />
-                                    </FormControl>
-                                    </div>
                                 </div>
                                 <div id='fixed-price-recap'>
                                 {
@@ -484,15 +427,27 @@ export default class Checkout extends React.Component {
                                         Frais de livraison : {this.state.deliveryPrice.toFixed(2)}€
                                     </Typography>
                                 </div>
-                                <div id='reduction-code'>
-                                    TODO : CODE DE REDUCTION AVEC TEXTINPUT + VERIF BD + BOUTON DE VALIATION "APPLIQUER LE CODE PROMO" + CALCUL DU NOUVEAU MONTANT
-                                    + MODIFICATION DU SERVICE PAYPAL POUR PRENDRE EN COMPTE LA REDUC DANS LE PAIEMENT.
-                                    + LE CODE PROMO S'APPLIQUE SUR TOUTE LA COMMANDE ? OU UNIQUEMENT LES ARTICLES ?
-                                </div>
+
                                 <div id='total'>
-                                    <Typography variant='h6' style={{  color:'#b26a00', marginBottom:'1em', marginTop:'1em'}}>
-                                        Total : { (this.state.cartEntity.totalPrice + this.state.deliveryPrice).toFixed(2)}€
-                                    </Typography>
+                                {
+                                   this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
+                                  <div style={{marginTop:'1.5em'}}>
+                                    <Alert severity='success' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
+                                      Le code promotionnel {this.state.cartEntity.promotionByFkPromotion.promotionCode} de {this.state.cartEntity.promotionByFkPromotion.reductionInPercents}% est appliqué !
+                                    </Alert> 
+                                  </div>
+                                  :
+                                  ''
+                                }
+                                  <Typography variant='h6' style={{  color:'#b26a00', marginBottom:'1em', marginTop:'1em'}}>
+                                    Total&nbsp;:&nbsp;
+                                    {
+                                      this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
+                                      this.state.cartEntity.totalPriceWithPromotion.toFixed(2) + '€'
+                                      :
+                                      this.state.cartEntity.totalPrice.toFixed(2) + '€'
+                                    }
+                                  </Typography>
                                 </div>
                                 <div id='remark'>
                                     <Typography variant='h6' style={{ color:'#b26a00', marginBottom:'0.5em', marginTop:'1.5em'}}>
@@ -514,7 +469,10 @@ export default class Checkout extends React.Component {
                                 <div id='floating-price-recap' style={{marginTop:'4em'}}>
                                 {
                                 this.state.cartEntity != null && this.state.cartEntity.totalPrice !== null ?
-                                <IllicoPriceRecapBottomBar price={this.state.cartEntity.totalPrice + this.state.deliveryPrice}/>
+                                  this.state.cartEntity.promotionByFkPromotion !== null & this.state.cartEntity.totalPriceWithPromotion !== null ?
+                                  <IllicoPriceRecapBottomBar price={this.state.cartEntity.totalPriceWithPromotion + this.state.deliveryPrice}/>
+                                  :
+                                  <IllicoPriceRecapBottomBar price={this.state.cartEntity.totalPrice + this.state.deliveryPrice}/>
                                 :
                                 ''
                                 }
@@ -527,22 +485,17 @@ export default class Checkout extends React.Component {
                     }
                     </div>
                     :
-                    <IllicoAskForConnection loginRedirectState={loginRedirectState}/>
+                    <IllicoAskForConnection loginRedirectState={loginRedirectState} history={this.props.history}/>
                 }
                 <div id='utils'>
-                    <Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="address-change-title" open={this.state.isAddressDialogOpen}>
-                        <DialogTitle id="address-change-title">Confirmer le changement d'addresse ?</DialogTitle>
-                        <DialogActions>
-                            <Button variant='contained' color='primary' onClick={() => this.handleAddressChangeCancel()}> Annuler </Button>
-                            <Button variant='contained' color='secondary' onClick={() => this.handleAddressChangeAccept()} autoFocus> Confirmer </Button>
-                        </DialogActions>
-                    </Dialog>
-
                     <Snackbar style={{marginBottom:'3.5em'}} open={this.state.paymentSuccessfulAlertOpen} autoHideDuration={5000} onClose={(event, reason) => this.handleClosePaymentSuccessfulAlert(event, reason)}>
                     <MuiAlert onClose={(event, reason) => this.handleClosePaymentSuccessfulAlert(event, reason)} severity='success'>
                         {this.state.paymentSuccessfulAlertText}
                     </MuiAlert>
                 </Snackbar>
+                <Backdrop style={backdrop} open={this.state.loadingPayment} onClick={() => this.handleBackdropLoadingPaymentClose()}>
+                  <CircularProgress color="inherit" />
+                </Backdrop>
                 {
                     this.state.paymentError ?
                     <div id='payment-error'>
@@ -555,6 +508,7 @@ export default class Checkout extends React.Component {
                     :
                     ''
                 }
+                
 
                 </div>
             </>

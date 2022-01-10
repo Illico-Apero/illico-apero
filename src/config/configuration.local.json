@@ -20,11 +20,13 @@
         "getCart": "cart/get-cart",
         "saveCart":"cart/save-cart",
         "clearCart":"cart/clear-cart",
+        "applyPromotion":"cart/apply-promotion",
         "changeAddress":"address/change-address",
         "placeOrder":"order/place-order",
         "getOrders":"order/get-orders",
         "isStoreOpened":"store/is-store-opened",
-        "getStore":"store/get-store"
+        "getStore":"store/get-store",
+        "getIfValid":"promotion/get-if-valid"
     },
     "debug":true
 }

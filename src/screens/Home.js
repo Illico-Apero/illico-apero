@@ -345,7 +345,7 @@ export default class Home extends React.Component {
                         {this.state.addedToCartMessage}
                     </MuiAlert>
                 </Snackbar>
-                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isAddToCartErrorAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)}>
+                <Snackbar style={{marginBottom:'3.5em'}} open={this.state.isAddToCartErrorAlertOpen} autoHideDuration={3000} onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)}>
                     <MuiAlert onClose={(event, reason) => this.handleCloseAddToCartErrorAlert(event, reason)} severity="error">
                         {this.state.addToCartErrorAlertText}
                     </MuiAlert>

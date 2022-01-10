@@ -2,6 +2,7 @@ import configuration from '../../config/configuration.json';
 import CartEntity from '../../models/CartEntity';
 import FormulaEntity from '../../models/FormulaEntity';
 import ProductEntity from '../../models/ProductEntity';
+import PromotionEntity from '../../models/PromotionEntity';
 import UserEntity from '../../models/UserEntity';
 import Http from '../Http';
 
@@ -67,4 +68,18 @@ export default class CartService {
             callback(data);
         });
     }
+
+    /**
+     * 
+     * @param {UserEntity} userEntity 
+     * @param {PromotionEntity} promotionEntity 
+     * @param {Function} callback 
+     */
+    applyPromotion(userEntity, promotionEntity, callback) {
+        Http.postWithJwt(configuration.server.baseUrl + configuration.endpoints.applyPromotion + '/' + userEntity.idUser + '/' + userEntity.databaseToken, JSON.stringify(promotionEntity), userEntity.jwt, (data) => {
+            callback(data);
+        })
+    }
+
+
 }

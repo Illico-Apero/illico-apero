@@ -49,7 +49,7 @@ export default class IllicoAskForConnection extends React.Component {
                             </Typography>
                         </div>
                     </Slide>
-                    <Register hideTopAppBar/>
+                    <Register hideTopAppBar history={this.props.history}/>
                 </div>
 
         )

@@ -12,10 +12,9 @@ export default class FrontEndLogService {
         Http.postWithoutJwt(configuration.server.baseUrl + configuration.endpoints.saveLog, JSON.stringify(body), 
         (data) => {
             /** @type ApiResponse */
-            let apiResponse = JSON.parse(data);
-            if(apiResponse.status === ApiResponse.GET_ERROR()) {
+            if(data.status === ApiResponse.GET_ERROR()) {
                 console.log("error occured while saving another error log to server.")
-                console.error(apiResponse.response);
+                console.error(data.response);
             }
             else {
                 console.warn("error log saved to server");

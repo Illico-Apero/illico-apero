@@ -107,7 +107,6 @@ export default class Profile extends React.Component {
       marginBottom:'2em'
   } 
 
-    //TODO : see orders list
     return (
       <div>
         <IllicoTopNavigation
@@ -191,7 +190,7 @@ export default class Profile extends React.Component {
                 )}
               </div>
             ) : (
-              <IllicoAskForConnection loginRedirectState={loginRedirectState} />
+              <IllicoAskForConnection loginRedirectState={loginRedirectState} history={this.props.history} />
             )}
           </>
         ) : (

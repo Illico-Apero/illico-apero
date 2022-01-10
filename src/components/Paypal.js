@@ -18,6 +18,7 @@ export default function Paypal(props) {
 
     useEffect(() => {
         const frontEndLogService = new FrontEndLogService();
+
         const initializeItem = (item, isFormula) => {
             return {
                 name: isFormula ? item.formulaByFkFormula.name : item.productByFkProduct.name,
@@ -38,10 +39,21 @@ export default function Paypal(props) {
                 items.push(initializeItem(product))
             }
     
-            return {
+            let hasDiscount = false;
+            let discount = 0;
+            let value = 0;
+            if(cartEntity.promotionByFkPromotion !== null && cartEntity.totalPriceWithPromotion !== null) {
+                hasDiscount = true;
+                discount = cartEntity.totalPrice - cartEntity.totalPriceWithPromotion
+                value = cartEntity.totalPrice + Checkout.GET_DELIVERY_PRICE() - discount;
+            }
+            else {
+                value = cartEntity.totalPrice + Checkout.GET_DELIVERY_PRICE()
+            }
+            let purchaseUnit = {
                 amount: {
                     currency_code: 'EUR',
-                    value: parseFloat((cartEntity.totalPrice + Checkout.GET_DELIVERY_PRICE()).toFixed(2)),
+                    value: parseFloat(value.toFixed(2)),
                     breakdown: {
                         item_total: {
                             currency_code: 'EUR',
@@ -50,11 +62,17 @@ export default function Paypal(props) {
                         shipping: {
                             currency_code: 'EUR',
                             value: Checkout.GET_DELIVERY_PRICE()
+                        },
+                        discount: {
+                            value:parseFloat(discount.toFixed(2)),
+                            currency_code:'EUR'
                         }
                     }
                 },
                 items: items
             };
+            if(!hasDiscount) delete  purchaseUnit.amount.breakdown.discount;
+            return purchaseUnit;
         }
         const handleError = (err) => {
             console.error(err);
@@ -63,9 +81,11 @@ export default function Paypal(props) {
         }
         window.paypal_sdk.Buttons({
             //NOTE / INFO :
-            //TODO props is not in the dependancy array so if address changes, it won't be changed from the paypal POV. + Adding props to the dependency would cause
-            // the buttons to be rerendered, without the previous buttons being deleted. So for now, I just removed the props from the dependancy array and I don't care
+            // props is not in the dependency array so if address changes, it won't be changed from the paypal POV. + Adding props to the dependency would cause
+            // the buttons to be rerendered, without the previous buttons being deleted. So for now, I just removed the props from the dependency array and I don't care
             // about having the wrong address in the paypal stuff.
+
+            //EDIT : Now the logic is that when the buttons are rendered (on the checkout page) nothing changes (no address/amount change) so it should be ok.
             createOrder: (data, actions, err) => {
                 return actions.order.create({
                     intent: 'CAPTURE',
@@ -78,12 +98,13 @@ export default function Paypal(props) {
                         address: {
                             address_line_1: props.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.streetNumber + ' ' + props.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.street + ' ' + props.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.city,
                             postal_code: props.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.postalCode,
+                            admin_area_2: props.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.city,
                             country_code: 'FR'
                         },
                         phone: {
                             phone_type: 'MOBILE',
                             phone_number: {
-                                national_number: '33' + props.userEntity.userPersonalInformationsByFkUserPersonalInformation.phone
+                                national_number: props.userEntity.userPersonalInformationsByFkUserPersonalInformation.phone
                             }
                         }
                     },
@@ -109,7 +130,7 @@ export default function Paypal(props) {
                 handleError(err);
             }
         }).render(paypal.current);
-        // eslint-disable-next-line
+        //eslint-disable-next-line
     }, [])
 
     return (
