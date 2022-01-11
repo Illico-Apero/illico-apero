@@ -10,8 +10,9 @@ import { Alert } from "@material-ui/lab";
 import { Badge, Card, CardContent, CardMedia, CircularProgress, Divider, Grid, Paper, Table, TableCell, TableContainer, TableHead, TableRow, Typography } from "@material-ui/core";
 import OrderService from "../network/services/OrderService";
 import OrderEntity from "../models/OrderEntity";
+import IllicoReactComponent from "../components/Generic/IllicoReactComponent";
 
-export default class Profile extends React.Component {
+export default class Profile extends IllicoReactComponent {
   constructor(props) {
     super(props);
     this.state = {
