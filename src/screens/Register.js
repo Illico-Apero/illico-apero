@@ -24,9 +24,10 @@ import Utils from '../utils/Utils';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
 import IllicoAudio from '../utils/IllicoAudio';
 import IllicoAddresses from '../components/IllicoAddresses';
+import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import { Alert } from '@material-ui/lab';
+import IllicoAlreadyConnected from '../components/IllicoAlreadyConnected';
 
-
-//TODO : display a message "already logged in" or redirect to home if already logged in.
 
 /**
  * @param {Boolean} hideTopAppBar
@@ -72,7 +73,7 @@ export default class Register extends IllicoReactComponent {
 				phoneError: false,
 				phoneHelper: 'Sur 10 chiffres, sans indicatif',
 				addressError: false,
-				addressHelper: 'Veuillez saisir une addresse'
+				addressHelper: 'Veuillez saisir une adresse'
 			},
 			radius: {
 				distance: 4000
@@ -95,7 +96,6 @@ export default class Register extends IllicoReactComponent {
 			this.setState({ loaded: true });
 		});
 	}
-
 	handleCloseLegalTermsAlert(event, reason) {
 		if (reason === 'clickaway') {
 			return;
@@ -132,7 +132,6 @@ export default class Register extends IllicoReactComponent {
 		IllicoAudio.playTapAudio();
 		this.setState({ openAccountCreationErrorAlert: false });
 	}
-
 	/**
 	 * Triggered everytime a form field changes (checkbox or textfield)
 	 * @param {*} fieldId 
@@ -173,13 +172,6 @@ export default class Register extends IllicoReactComponent {
 			this.updateError(FormValidator.isPhoneValid, newValue, 'phoneError', 'phoneHelper', "Numéro invalide. Doit être sur 10 chiffres, sans indicatif");
 		}
 	}
-
-
-
-	/**
-	 * 
-	 * @param {*} event 
-	 */
 	checkAndRefreshAddress(event, value) {
 		let updatedErrors = this.state.errors;
 		let form = this.state.form;
@@ -190,7 +182,7 @@ export default class Register extends IllicoReactComponent {
 			if (approxDistanceFromCenter > this.state.radius.distance) {
 				IllicoAudio.playAlertAudio();
 				updatedErrors.addressError = true;
-				updatedErrors.addressHelper = "Cette addresse n'est pas éligible !";
+				updatedErrors.addressHelper = "Cette adresse n'est pas éligible !";
 			}
 			else if (approxDistanceFromCenter < this.state.radius.distance) {
 				IllicoAudio.playUiLockAudio();
@@ -199,12 +191,11 @@ export default class Register extends IllicoReactComponent {
 			}
 		} else {
 			updatedErrors.addressError = true;
-			updatedErrors.addressHelper = 'Veuillez saisir une addresse';
+			updatedErrors.addressHelper = 'Veuillez saisir une adresse';
 			form.addressObject = null;
 		}
 		this.setState({ errors: updatedErrors });
 	}
-
 	/**
 	 * 
 	 * @param {Function} isValid 
@@ -225,7 +216,6 @@ export default class Register extends IllicoReactComponent {
 		}
 		this.setState({ errors: updatedErrors });
 	}
-
 	handleSubmit() {
 		if (this.validateForm()) {
 			if (this.state.form.majority) {
@@ -305,7 +295,6 @@ export default class Register extends IllicoReactComponent {
 			this.setState({ openMainAlert: true });
 		}
 	}
-
 	/**
 	 * 
 	 * @returns {Boolean}
@@ -337,7 +326,6 @@ export default class Register extends IllicoReactComponent {
 			width: '16em',
 			zIndex: this.props.useNegativeZIndex ? -1 : 0
 		}
-
 		// Those are the states we need to passe to subPages, so that they are aware of the context : then we can use 'back' redirection from sub pages.
 		const deliveryZoneRedirectState = {
 			pathname: '/delivery-zone',
@@ -345,19 +333,15 @@ export default class Register extends IllicoReactComponent {
 				backUrl: '/register'
 			}
 		}
-
 		const termsRedirectState = {
 			pathname: '/legal-terms',
 			state: {
 				backUrl: '/register'
 			}
 		}
-
 		const previousPageRedirection = RedirectionStateHandler.getRedirectionStateWithSlideDown(this.props.location);
 		// on va à gauche par défaut, ou bien à la direction donnée par les props
 		const slideDirection = RedirectionStateHandler.getSlideDirection('left', this.props.location);
-
-
 
 		return (
 			<div>
@@ -369,7 +353,11 @@ export default class Register extends IllicoReactComponent {
 				}
 
 				<Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
-					<FormControl>
+					{
+						this.state.isUserLoggedIn ?
+						<IllicoAlreadyConnected/>
+						:
+						<FormControl>
 						<TextField id='email' error={this.state.errors.emailError} helperText={this.state.errors.emailHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='email' label='Adresse e-mail' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
 						<TextField id='password' error={this.state.errors.passwordError} helperText={this.state.errors.passwordHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} inputProps={{ maxLength: 32 }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
 						<TextField id='passwordConfirm' error={this.state.errors.passwordConfirmError} helperText={this.state.errors.passwordConfirmHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Confirmer le mot de passe' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} inputProps={{ maxLength: 32 }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
@@ -455,6 +443,7 @@ export default class Register extends IllicoReactComponent {
 						</Snackbar>
 
 					</FormControl>
+					}
 				</Slide>
 			</div>
 		);

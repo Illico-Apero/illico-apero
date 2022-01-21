@@ -5,12 +5,12 @@ import { AppBar, Paper, Typography } from '@material-ui/core';
 /**
  * @param {String} price
  */
-export default class IllicoPriceRecapBottomBar extends React.Component {
+export default class IllicoBottomBarAlert extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            loaded: false,
+            loaded: false
         }
     }
 
@@ -20,9 +20,9 @@ export default class IllicoPriceRecapBottomBar extends React.Component {
 
     render() {
         return (
-            <AppBar position="fixed" color="primary" style={{ top: 'auto', bottom: 0, textAlign:'left', paddingLeft:'0.5em'}}>
+            <AppBar position="fixed" color="primary" style={{top: 'auto', bottom: 0, textAlign:'left', paddingLeft:'0.5em'}}>
                 <Typography variant='body1' style={{fontSize:'16px', marginLeft:'auto', marginRight:'auto'}}>
-                    Total avec livraison : {(this.props.price).toFixed(2)}€
+                    {this.props.text}
                 </Typography>
             </AppBar>
         )

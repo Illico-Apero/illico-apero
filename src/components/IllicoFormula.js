@@ -25,7 +25,7 @@ class IllicoFormula extends React.Component
             <div style= {{
                 marginBottom:'2em',
                 aspectRatio:1/2,
-                width:400,
+                width:300,
                 marginLeft: 'auto',
                 marginRight: 'auto'
             }}>
@@ -37,7 +37,7 @@ class IllicoFormula extends React.Component
                         image={`../img/products/${this.props.image}`}
                         style={{
                             aspectRatio:1/1,
-                            width:400
+                            width:300
                         }}
                     />
                     <CardContent>

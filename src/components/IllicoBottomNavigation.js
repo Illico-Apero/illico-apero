@@ -6,6 +6,7 @@ import IllicoAudio from '../utils/IllicoAudio';
 import HomeIcon from './Generic/HomeIcon';
 import NoDecorationLink from './Generic/NoDecorationLink';
 import NoDecorationLinkClass from './Generic/NoDecorationLinkClass';
+import IllicoBottomBarAlert from './IllicoBottomBarAlert';
 
 /**
  * Illico Apero Bottom Navigation
@@ -21,6 +22,7 @@ class IllicoBottomNavigation extends React.Component
             loaded: false,
             bottomNavigationValue:this.props.bottomNavigationValue,
             quantityInCart: this.props.quantityInCart,
+            isAlcoholPage: /*this.props.isAlcoholPage*/ true, //ENABLE MESSAGE EVERYWHERE. LEAVE IT AS A BOOLEAN FOR EVENTUAL FUTURE MODIFICATIONS
         }
     }
 
@@ -37,8 +39,12 @@ class IllicoBottomNavigation extends React.Component
 
     render()
     {
+        const paperStyle = this.state.isAlcoholPage ?
+        { position: 'fixed', bottom: 20, left: 0, right: 0, zIndex:5 } :
+        { position: 'fixed', bottom: 0, left: 0, right: 0, zIndex:5 }
+
         return(
-            <Paper style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex:5 }} elevation={3}>
+            <Paper style={paperStyle} elevation={3}>
                 <BottomNavigation showLabels value={this.state.bottomNavigationValue} onChange={(e, newValue) => this.setState({bottomNavigationValue: newValue})}>
                     <BottomNavigationAction label="Profil" icon={<Person/>} component={NoDecorationLinkClass} to='/profile' onClick={() => IllicoAudio.playNavigationForwardAudio()}/>
                     <BottomNavigationAction label="Catalogue" icon={<HomeIcon/>} component={NoDecorationLinkClass} to='/home' onClick={() => IllicoAudio.playNavigationForwardAudio()} />
@@ -50,6 +56,15 @@ class IllicoBottomNavigation extends React.Component
                             component={NoDecorationLinkClass} to='/cart' onClick={() => IllicoAudio.playNavigationForwardAudio()}
                         />
                 </BottomNavigation>
+
+                {
+                    this.state.isAlcoholPage ?
+                    <IllicoBottomBarAlert text={"L'abus d'alcool est dangereux pour la santé."} 
+						style={{top: 'auto', bottom: 0, textAlign:'left', paddingLeft:'0.5em'}}/>
+                    :
+                    ''
+                }
+
         </Paper>
         );
     }

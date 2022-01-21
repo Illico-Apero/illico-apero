@@ -29,6 +29,7 @@ import PromotionService from '../network/services/PromotionService';
 import IllicoAddresses from '../components/IllicoAddresses';
 import AddressService from '../network/services/AddressService';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import IllicoExceptionallyClosed from '../components/IllicoExceptionallyClosed';
 
 
 export default class Cart extends IllicoReactComponent {
@@ -208,7 +209,8 @@ export default class Cart extends IllicoReactComponent {
 		Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
 			this.cartService.saveCart(this.state.userEntity, cart, this.state.userEntity.jwt, (data) => {
 				if (data.status === ApiResponse.GET_SUCCESS()) {
-					cart.totalPrice = data.response;
+					cart.totalPrice = data.response.totalPrice;
+					cart.totalPriceWithPromotion = data.response.totalPriceWithPromotion;
 					this.setState({ cartEntity: cart }, () => {
 						this.retrieveQuantityInCart(() => { });
 					});
@@ -291,6 +293,7 @@ export default class Cart extends IllicoReactComponent {
 						let userEntityCopy = this.state.userEntity;
 						userEntityCopy.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress = this.state.changedAddress;
 						this.setState({ userEntity: userEntityCopy });
+						localStorage.setItem('userEntity', JSON.stringify(userEntityCopy));
 					}
 					else {
 						this.frontEndLogService.saveLog(this.getUserIdIfLoggedInOtherwiseMinus1, "Error occured while trying to change address. Check server logs : " + response.response);
@@ -340,7 +343,6 @@ export default class Cart extends IllicoReactComponent {
 		}
 		this.setState({ showPromoCodeError: false });
 	}
-
 	applyPromotionCode() {
 		if (this.state.promotionCodeTextField !== '') {
 			Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
@@ -396,7 +398,7 @@ export default class Cart extends IllicoReactComponent {
 		}
 		const checkoutRootStyle = {
 			display: 'flex',
-			width: 180,
+			width: 190,
 			marginRight: 'auto',
 			marginLeft: 'auto',
 			marginBottom: '2em',
@@ -424,7 +426,7 @@ export default class Cart extends IllicoReactComponent {
 									''
 							}{
 									this.state.cartEntity !== null ?
-										<div style={{ marginBottom: '5em' }}> {
+										<div style={{ marginBottom: '15em' }}> {
 											(this.state.cartEntity.cartFormulasByIdCart.length === 0 && this.state.cartEntity.cartProductsByIdCart.length === 0) ||
 												(this.state.cartEntity.cartFormulasByIdCart.every(item => !item) && this.state.cartEntity.cartProductsByIdCart.every(item => !item)) ?
 												<Alert severity='info' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
@@ -444,7 +446,7 @@ export default class Cart extends IllicoReactComponent {
 																				&& this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress !== null ?
 																				<div id='address-display'>
 																					<Typography variant='body1' id='identity' style={{ fontSize: '14px' }}>
-																						Votre addresse de livraison :
+																						Votre adresse de livraison :
 																					</Typography>
 																					<Typography variant='body1' id='identity' style={{ fontSize: '12px' }}>
 																						{
@@ -472,7 +474,7 @@ export default class Cart extends IllicoReactComponent {
 																	</div>
 																	<div id='address-change'>
 																		<Typography variant='body1' style={{ marginTop: '0.3em', color: '#b26a00', marginBottom: '0.5em' }}>
-																			Changer d'addresse :
+																			Changer d'adresse :
 																		</Typography>
 																		<FormControl style={{ width: '300px', marginBottom: '2em' }}>
 																			<IllicoAddresses key={this.state.addressKey} addressHelper={this.state.addressHelper} addressError={this.state.addressError} onChange={this.handleAddressChange} />
@@ -483,7 +485,7 @@ export default class Cart extends IllicoReactComponent {
 																	<Typography variant='body1' style={{ marginTop: '0.3em', color: '#b26a00', marginBottom: '0.5em' }}>
 																		Code promotionnel
 																	</Typography>
-																	<TextField id="promotion-code" label="Vous avez un code promo ?" variant="outlined" color="secondary" value={this.state.promotionCodeTextField}
+																	<TextField id="promotion-code" label="Saisir votre code promo" variant="outlined" color="secondary" value={this.state.promotionCodeTextField}
 																		onChange={(event) => this.handlePromotionChange(event.target.value)} />
 
 																	<div id='confirm-promotion' style={{ marginTop: '1em' }}>
@@ -502,6 +504,20 @@ export default class Cart extends IllicoReactComponent {
 																			''
 																	}
 																</div>
+																<div>
+																{
+																	this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
+																	<div style={{ marginTop: '1.5em' }}>
+																				<Alert severity='info' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
+																					Prix avant promotion : {this.state.cartEntity.totalPrice.toFixed(2) + '€'}. 
+																					Vous économisez {(this.state.cartEntity.totalPrice - this.state.cartEntity.totalPriceWithPromotion).toFixed(2) + '€ 🤑'}
+																				</Alert>
+																			</div>
+																			:
+																			''
+																}
+																</div>
+
 																<Typography variant='body1' style={{ marginTop: '0.3em', color: '#b26a00', marginBottom: '0.5em' }}>
 																	Paiement
 																</Typography>
@@ -529,17 +545,7 @@ export default class Cart extends IllicoReactComponent {
 															</div>
 															:
 															this.state.closedProgrammatically ?
-																<Alert severity="error" elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
-																	Les commandes sont fermées de manière exceptionnelle. Impossible de passer commande pour l'instant.
-																	Suivez-nous sur nos réseaux sociaux pour plus d'informations :
-																	<Typography variant='body1' style={{ textAlign: 'center' }}>
-																		<br />
-																		<a href='https://www.facebook.com/illico.apero.dijon'>Facebook</a>
-																		<br />
-																		<br />
-																		<a href='https://www.instagram.com/illico.apero.dijon/?hl=fr'>Instagram</a>
-																	</Typography>
-																</Alert>
+																<IllicoExceptionallyClosed/>
 																:
 																<Alert severity='error' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '290px', textAlign: 'left' }}>
 																	Nous sommes actuellement fermés 🥺. Revenez plus tard !
@@ -552,7 +558,7 @@ export default class Cart extends IllicoReactComponent {
 															!this.state.cartEntity.cartFormulasByIdCart.every(item => !item) ?
 															<>
 																<Typography variant='h5' style={{ marginTop: '1em', marginBottom: '0.5em', color: '#b26a00' }}>
-																	Vos formules {' '}
+																	Vos Formules {' '}
 																	<img src={yellow_circle} alt='yellow geometric circles' style={{ height: '0.7em' }} />
 																</Typography> {
 																	this.state.cartEntity.cartFormulasByIdCart.map(
@@ -601,7 +607,7 @@ export default class Cart extends IllicoReactComponent {
 										}
 										</div>
 										:
-										<div style={{ marginBottom: '5em', marginTop: '1em' }}>
+										<div style={{ marginBottom: '6em', marginTop: '1em' }}>
 											<CircularProgress />
 										</div>
 								}
@@ -612,10 +618,10 @@ export default class Cart extends IllicoReactComponent {
 					<IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart} />
 					<div id='dialogs'>
 						<Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="address-change-title" open={this.state.isAddressDialogOpen}>
-							<DialogTitle id="address-change-title">Confirmer le changement d'addresse ?</DialogTitle>
+							<DialogTitle id="address-change-title">Confirmer le changement d'adresse ?</DialogTitle>
 							<DialogActions>
-								<Button variant='contained' color='primary' onClick={() => this.handleAddressChangeCancel()}> Annuler </Button>
-								<Button variant='contained' color='secondary' onClick={() => this.handleAddressChangeAccept()} autoFocus> Confirmer </Button>
+								<Button variant='contained' color='secondary' onClick={() => this.handleAddressChangeCancel()}> Annuler </Button>
+								<Button variant='contained' color='primary' onClick={() => this.handleAddressChangeAccept()} autoFocus> Confirmer </Button>
 							</DialogActions>
 						</Dialog>
 						<Snackbar style={{ marginBottom: '3.5em' }} open={this.state.isQuantityUpdatedAlertOpen} autoHideDuration={1500} onClose={(event, reason) => this.handleCloseQuantityUpdatedAlert(event, reason)}>
@@ -663,8 +669,8 @@ export default class Cart extends IllicoReactComponent {
 						<Dialog onClose={(event, reason) => this.handleCloseRemoveItemDialog(event, reason)} aria-labelledby="delete-cart-item-title" open={this.state.isRemoveItemDialogOpen}>
 							<DialogTitle id="delete-cart-item-title">Supprimer l'article du panier ?</DialogTitle>
 							<DialogActions>
-								<Button variant='contained' color='primary' onClick={() => this.handleRemoveFromCartCancel()}> Annuler </Button>
-								<Button variant='contained' color='secondary' onClick={() => this.handleRemoveFromCartAccept()} autoFocus> Supprimer </Button>
+								<Button variant='contained' color='secondary' onClick={() => this.handleRemoveFromCartCancel()}> Annuler </Button>
+								<Button variant='contained' color='primary' onClick={() => this.handleRemoveFromCartAccept()} autoFocus> Supprimer </Button>
 							</DialogActions>
 						</Dialog>
 					</div>

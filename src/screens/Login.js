@@ -6,22 +6,19 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
-import FormValidator from '../utils/FormValidator';
-import IllicoButton from '../components/IllicoButton';
 import StyledLink from '../components/Generic/StyledLink';
 import UserService from '../network/services/UserService';
 import FrontEndLogService from '../network/services/FrontEndLogService';
 import UserEntity from '../models/UserEntity';
 import ApiResponse from '../models/api/ApiResponse';
-import Utils from '../utils/Utils';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
+import FormValidator from '../utils/FormValidator';
+
+import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
 import IllicoAudio from '../utils/IllicoAudio';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
-
-
-
-//TODO : display a message "already logged in" or redirect to home if already logged in.
+import IllicoAlreadyConnected from '../components/IllicoAlreadyConnected';
+import IllicoButton from '../components/IllicoButton';
 
 export default class Login extends IllicoReactComponent {
 
@@ -72,13 +69,11 @@ export default class Login extends IllicoReactComponent {
 		IllicoAudio.playTapAudio();
 		this.setState({ openLoggedInOkAlert: false });
 	}
-
 	componentDidMount() {
 		this.setState({ isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn')) }, () => {
 			this.setState({ loaded: true });
 		});
 	}
-
 	/**
 	* Triggered everytime a form field changes (checkbox or textfield)
 	* @param {*} fieldId 
@@ -98,15 +93,6 @@ export default class Login extends IllicoReactComponent {
 			this.updateError(FormValidator.isPasswordInBounds, newValue, 'passwordError', 'passwordHelper', "Doit être compris entre 8 et 32 caractères");
 		}
 	}
-
-	/**
-	* 
-	* @param {Function} isValid 
-	* @param {String} newValue 
-	* @param {String} errorKey 
-	* @param {String} helperKey 
-	* @param {String} errorHelperText 
-	*/
 	updateError(isValid, newValue, errorKey, helperKey, errorHelperText) {
 		let updatedErrors = this.state.errors;
 		if (isValid(newValue) || newValue === '') {
@@ -118,7 +104,6 @@ export default class Login extends IllicoReactComponent {
 			updatedErrors[helperKey] = errorHelperText;
 		}
 	}
-
 	handleSubmit() {
 		if (this.validateForm()) {
 			this.setState({ isLoading: true })
@@ -170,7 +155,6 @@ export default class Login extends IllicoReactComponent {
 			this.setState({ openMainAlert: true });
 		}
 	}
-
 	validateForm() {
 		let errors = this.state.errors;
 		let form = this.state.form;
@@ -201,47 +185,59 @@ export default class Login extends IllicoReactComponent {
 
 		return (
 			<div>
-				<IllicoSimpleAppBar to={previousPageRedirection} title='Connexion' />
-				<Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
+			{
+				this.state.loaded ?
 					<div>
-						<FormControl>
-							<TextField id='email' error={this.state.errors.emailError} helperText={this.state.errors.emailHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='email' label='Adresse e-mail' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
-							<TextField id='password' error={this.state.errors.passwordError} helperText={this.state.errors.passwordHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} inputProps={{ maxLength: 32 }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
+					<IllicoSimpleAppBar to={previousPageRedirection} title='Connexion' />
+					<Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
+						<div>
+						{
+							this.state.isUserLoggedIn ?
+							<IllicoAlreadyConnected/>
+							:
+								<FormControl>
+								<TextField id='email' error={this.state.errors.emailError} helperText={this.state.errors.emailHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='email' label='Adresse e-mail' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
+								<TextField id='password' error={this.state.errors.passwordError} helperText={this.state.errors.passwordHelper} size='small' variant='outlined' required={true} style={buttonStyle} type='password' label='Mot de passe' onChange={(event) => { this.updateFormValue(event.target.id, event.target.value) }} inputProps={{ maxLength: 32 }} onClick={() => IllicoAudio.playTapAudio()} /> <br />
 
-							{this.state.isLoading ?
-								<div>
-									<CircularProgress />
+								{this.state.isLoading ?
+									<div>
+										<CircularProgress />
+									</div>
+									: null}
+								<IllicoButton disabled={this.state.isLoading} color='primary' text="Me connecter !" onClick={() => this.handleSubmit()} />
+								<div aria-disabled={this.state.isLoading} onClick={() => IllicoAudio.playNavigationForwardAudio()}>
+									<StyledLink to={forgottenPasswordRedirectState}>Mot de passe oublié ?</StyledLink>
 								</div>
-								: null}
-							<IllicoButton disabled={this.state.isLoading} color='primary' text="Me connecter !" onClick={() => this.handleSubmit()} />
+							</FormControl>
+						}
+							<div id='utils'>
+								{/* MAIN ALERT SNACKBAR */}
+								<Snackbar open={this.state.openMainAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseMainAlert(event, reason)}>
+									<MuiAlert onClose={(event, reason) => this.handleCloseMainAlert(event, reason)} severity="error">
+										Veuillez correctement renseigner le formulaire !
+									</MuiAlert>
+								</Snackbar>
 
-							<div aria-disabled={this.state.isLoading} onClick={() => IllicoAudio.playNavigationForwardAudio()}>
-								<StyledLink style={this.state.isLoading ? null : { pointerEvents: 'none' }} to={forgottenPasswordRedirectState}>Mot de passe oublié ?</StyledLink>
+								{/* CONNECTED SNACKBAR */}
+								<Snackbar open={this.state.openLoggedInOkAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseOpenLoggedInOkAlert(event, reason)}>
+									<MuiAlert onClose={(event, reason) => this.handleCloseOpenLoggedInOkAlert(event, reason)} severity="success">
+										Hey {this.state.nameFromApi} 🍻 ! Redirection en cours...
+									</MuiAlert>
+								</Snackbar>
+
+								{/* FAIL SNACKBAR */}
+								<Snackbar open={this.state.openLoggedInErrorAlert} autoHideDuration={5000} onClose={(event, reason) => this.handleCloseOpenLoggedInErrorAlert(event, reason)}>
+									<MuiAlert onClose={(event, reason) => this.handleCloseOpenLoggedInErrorAlert(event, reason)} severity="error">
+										{this.state.failReason}
+									</MuiAlert>
+								</Snackbar>
 							</div>
-						</FormControl>
-
-						{/* MAIN ALERT SNACKBAR */}
-						<Snackbar open={this.state.openMainAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseMainAlert(event, reason)}>
-							<MuiAlert onClose={(event, reason) => this.handleCloseMainAlert(event, reason)} severity="error">
-								Veuillez correctement renseigner le formulaire !
-							</MuiAlert>
-						</Snackbar>
-
-						{/* CONNECTED SNACKBAR */}
-						<Snackbar open={this.state.openLoggedInOkAlert} autoHideDuration={4000} onClose={(event, reason) => this.handleCloseOpenLoggedInOkAlert(event, reason)}>
-							<MuiAlert onClose={(event, reason) => this.handleCloseOpenLoggedInOkAlert(event, reason)} severity="success">
-								Hey {this.state.nameFromApi} 🍻 ! Redirection en cours...
-							</MuiAlert>
-						</Snackbar>
-
-						{/* FAIL SNACKBAR */}
-						<Snackbar open={this.state.openLoggedInErrorAlert} autoHideDuration={5000} onClose={(event, reason) => this.handleCloseOpenLoggedInErrorAlert(event, reason)}>
-							<MuiAlert onClose={(event, reason) => this.handleCloseOpenLoggedInErrorAlert(event, reason)} severity="error">
-								{this.state.failReason}
-							</MuiAlert>
-						</Snackbar>
-					</div>
-				</Slide>
+						</div>
+					</Slide>
+				</div>
+				:
+				<CircularProgress/>
+			}
 			</div>
 		)
 	}

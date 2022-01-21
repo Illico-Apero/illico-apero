@@ -5,22 +5,13 @@ export default class Closed extends React.Component {
     render() {
         return (
             <Alert 
-                severity="error" 
+                severity='error'
                 elevation={3}
-                style=
-                {{
-                    marginTop:'2em',
-                    marginBottom:'2em',
-                    marginLeft:'auto',
-                    marginRight:'auto',
-
-                    width:'260px',
-                    textAlign:'left'
-                }}>
+                style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'260px', textAlign:'left'}}>
                 Nous sommes actuellement fermés 😪 {'\n'}
                 Vous pouvez tout de même consulter {'\n'}
                 notre catalogue !
             </Alert>
-        )
+        );
     }
 }

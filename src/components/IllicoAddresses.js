@@ -36,7 +36,7 @@ export default class IllicoAddresses extends React.Component {
                 <Autocomplete id="address_autocomplete" options={addresses} getOptionLabel={(option) => FormValidator.formatAddress(option)} 
                     filterOptions={filterOptions} clearOnEscape onChange={(event, value) => {this.props.onChange(event, value)}}
                         renderInput={(params) => ( 
-                        <TextField {...params} id="address" label="Addresse" variant="outlined" style={{zIndex: this.props.useNegativeZIndex ? -1 : 0}}
+                        <TextField {...params} id="address" label="Adresse" variant="outlined" style={{zIndex: this.props.useNegativeZIndex ? -1 : 0}}
                         helperText={this.props.addressHelper} error={this.props.addressError}
                         onClick={() => IllicoAudio.playTapAudio()}
                         />)}

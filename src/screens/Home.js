@@ -33,7 +33,6 @@ import IllicoTopNavigation from '../components/IllicoTopNavigation';
 import { Link } from 'react-router-dom';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
 
-//TODO : Stock handling (Formula (home.js) & products (category.js))
 export default class Home extends IllicoReactComponent {
 
 	constructor(props) {
@@ -66,12 +65,9 @@ export default class Home extends IllicoReactComponent {
 		this.cartService = new CartService();
 		this.userService = new UserService();
 		this.frontEndLogService = new FrontEndLogService();
-
-		this.initializeCategories();
-		this.initializeFormulas();
 	}
 
-	initializeCategories() {
+	initializeCategoriesAndFormulas() {
 		this.productService.getCategories(
 			/** @param {ApiResponse} data */
 			(data) => {
@@ -85,16 +81,19 @@ export default class Home extends IllicoReactComponent {
 					this.frontEndLogService.saveLog(userId, JSON.stringify(data.response));
 				}
 			});
-	}
-	initializeFormulas() {
+
 		this.formulaService.getFormulas(
 			/** @param {ApiResponse} data */
 			(data) => {
 				if (data.status === ApiResponse.GET_SUCCESS()) {
-					this.setState({ formulas: data.response })
+					this.setState({ formulas: data.response }, () =>
+						this.setState({ loaded:true })
+					);
 				}
 				else if (data.status === ApiResponse.GET_ERROR()) {
-					this.setState({ homeLoadingError: true });
+					this.setState({ homeLoadingError: true }, () =>
+						this.setState({ loaded:true })
+					);
 					console.error(data.response);
 					let userId = this.getUserIdIfLoggedInOtherwiseMinus1();
 					this.frontEndLogService.saveLog(userId, JSON.stringify(data.response));
@@ -115,34 +114,34 @@ export default class Home extends IllicoReactComponent {
 			})
 		});
 	}
-	handleCloseAddedToCartAlert(event, reason) { //TODO : redundant, pass bool to change as param
+	handleCloseAddedToCartAlert(event, reason) {
 		if (reason === 'clickaway') {
 
 			return;
 		}
 		this.setState({ addedToCartAlert: false });
 	}
-	handleCloseAddToCartErrorAlert(event, reason) { //TODO : redundant, pass bool to change as param
+	handleCloseAddToCartErrorAlert(event, reason) {
 		if (reason === 'clickaway') {
 			return;
 		}
 		this.setState({ isAddToCartErrorAlertOpen: false });
 	}
-	handleCloseAddMoreThan9itemsWarningAlert(event, reason) { //TODO : redundant, pass bool to change as param
+	handleCloseAddMoreThan9itemsWarningAlert(event, reason) {
 		if (reason === 'clickaway') {
 			return;
 		}
 		this.setState({ isAddMoreThan9itemsWarningAlertOpen: false });
 	}
-	handleCloseNotLoggedInDialog() {//TODO : redundant, pass bool to change as param
+	handleCloseNotLoggedInDialog() {
 		this.setState({ isNotLoggedInDialogOpen: false });
 		IllicoAudio.playUiLockAudio();
 	}
-	handleDialogSignInClick() {//TODO : redundant, pass bool to change as param
-		IllicoAudio.playTapAudio(); //TODO : is it working ? test when not connected
+	handleDialogSignInClick() {
+		IllicoAudio.playTapAudio();
 	}
-	handleDialogSignUpClick() {//TODO : redundant, pass bool to change as param
-		IllicoAudio.playTapAudio(); //TODO : is it working ? test when not connected
+	handleDialogSignUpClick() {
+		IllicoAudio.playTapAudio(); 
 	}
 
 	addFormulaToCart(formula) {
@@ -184,15 +183,14 @@ export default class Home extends IllicoReactComponent {
 		return (this.state.isUserLoggedIn) ? this.state.userEntity.idUser : -1;
 	}
 	componentDidMount() {
-		// many callbacks cause setstate is async. By doing this, we are sure that local storage user is well loaded before component gets rendered.
 		this.setState({ userEntity: JSON.parse(localStorage.getItem('userEntity')) }, () => {
 			this.setState({ isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn')) }, () => {
 				if (this.state.isUserLoggedIn) {
 					this.retrieveQuantityInCart(() => {
-						this.setState({ loaded: true });
+						this.initializeCategoriesAndFormulas();
 					});
 				} else {
-					this.setState({ loaded: true });
+					this.initializeCategoriesAndFormulas();
 				}
 			});
 		});
@@ -237,107 +235,110 @@ export default class Home extends IllicoReactComponent {
 		}
 		return (
 			<div>
-				<IllicoTopNavigation showLogo backUrl={"/home"} isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
-				<Slide direction='up' in={this.state.loaded} mountOnEnter unmountOnExit timeout={400}>
+				{
+					this.state.loaded ?
+					this.state.homeLoadingError ?
 					<div>
-						{/* TODO : affichage du catalogue, du menu en bas, etc. voir maquette. Si connecté, afficher certains trucs en + ? */}
-
-						{ /************************** CATEGORIES **************************/}
-
-						<div id="categories">
-							<Typography variant='h4' gutterBottom style={{ paddingTop: '0.3em', color: '#b26a00', marginBottom: '1em' }}>
-								NOS CATÉGORIES {' '}
-								<img src={yellow_circle} alt='yellow geometric circles' style={{
-									height: '0.7em'
-								}} />
-							</Typography>
-							{
-								this.state.categories !== null ?
-									<Grid container>
-										{
-											this.state.categories.map((category, index) => (
-												<Grid key={index} item xs>
-													<Typography variant='subtitle1' gutterBottom style={{ paddingTop: '0.1em', color: '#b26a00' }}>
-														<div onClick={() => IllicoAudio.playNavigationForwardAudio()}>
-															<IllicoChip text={Utils.getCategoryPluralWith_LES_inFrontAndEmoji(category)} color='primary' to={this.getCategoryRedirectState(category)} />
-														</div>
-													</Typography>
-													<div onClick={() => IllicoAudio.playNavigationForwardAudio()}>
-														<IllicoCategory image={category} to={this.getCategoryRedirectState(category)} />
-													</div>
-												</Grid>
-											))
-										}
-									</Grid>
-									:
-									<div>
-										<Alert severity="error" elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
-											Une erreur est survenue,
-											impossible de contacter le serveur pour charger la page.
-											Veuillez réessayer plus tard
-											ou informer le support.
-										</Alert>
-									</div>
-							}
-						</div>
-
-						<div style={{ marginTop: '4em' }} />
-						<Divider variant="middle" />
-						<div style={{ marginBottom: '4em' }} />
-
-
-						{ /************************** FORMULAS **************************/}
-
-						<div id="formules">
-							<Typography variant='h4' gutterBottom style={{ paddingTop: '0.1em', color: '#b26a00', marginBottom: '1em' }}>
-								NOS FORMULES {' '}
-								<img src={blue_bubble} alt='blue geometric circle' style={{
-									height: '0.7em'
-								}} />
-							</Typography>
-							{
-								this.state.formulas !== null ?
-									<div style={{ marginBottom: '5em' }}>
-										{
-											<Grid container>
-												{
-													this.state.formulas.map(
-														/**
-														* 
-														* @param {FormulaEntity} item 
-														* @param {Number} index 
-														* @returns some content 
-														*/
-														(formula, index) => (
-															<Grid key={index} item xs>
-																{/* TODO : HANDLE ADD TO BASKET FUNCTION + DISPLAY ANIMATION + DISPLAY '1', '2', etc. close to 'Panier' like notifications */}
-																<IllicoFormula image={formula.picturePath} title={formula.name} description={formula.description} price={formula.price}
-																	onBasketAddClick={() => this.addFormulaToCart(formula)} />
-															</Grid>
-														))
-												}
-											</Grid>
-
-										}
-									</div>
-									: <div style={{ marginBottom: '5em' }}>
-										<CircularProgress />
-									</div>
-							}
-						</div>
+						<Alert severity="error" elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
+							Une erreur est survenue,
+							impossible de contacter le serveur pour charger la page.
+							Veuillez réessayer plus tard
+							ou informer le support.
+						</Alert>
 					</div>
-				</Slide>
-
-				<div>
-					{
-						!this.state.loaded ?
-							<div style={{ marginBottom: '5em' }}>
-								<CircularProgress />
+					:
+					<div>
+						<IllicoTopNavigation showLogo backUrl={"/home"} isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
+						<Slide direction='up' in={this.state.loaded} mountOnEnter unmountOnExit timeout={400}>
+						<div>
+							{ /************************** CATEGORIES **************************/}
+							<div id="categories">
+								<Typography variant='h4' gutterBottom style={{ paddingTop: '0.3em', color: '#b26a00', marginBottom: '1em', marginTop: '1em', fontWeight:'bold'  }}>
+									NOS CATÉGORIES {' '}
+									<img src={yellow_circle} alt='yellow geometric circles' style={{
+										height: '0.7em'
+									}} />
+								</Typography>
+								{
+									this.state.categories !== null ?
+										<Grid container>
+											{
+												this.state.categories.map((category, index) => (
+													<Grid key={index} item xs>
+														<Typography variant='subtitle1' gutterBottom style={{ paddingTop: '0.1em', color: '#b26a00' }}>
+															<div onClick={() => IllicoAudio.playNavigationForwardAudio()}>
+																<IllicoChip text={Utils.getCategoryPluralWith_LES_inFrontAndEmoji(category)} color='primary' to={this.getCategoryRedirectState(category)} />
+															</div>
+														</Typography>
+														<div onClick={() => IllicoAudio.playNavigationForwardAudio()}>
+															<IllicoCategory image={category} to={this.getCategoryRedirectState(category)} />
+														</div>
+													</Grid>
+												))
+											}
+										</Grid>
+										:
+										<CircularProgress/>
+								}
 							</div>
-							: ''
-					}
+							<div style={{ marginTop: '4em' }} />
+							<Divider variant="middle" />
+							<div style={{ marginBottom: '4em' }} />
+							{ /************************** FORMULAS **************************/}
+
+							<div id="formules">
+								<Typography variant='h4' gutterBottom style={{ paddingTop: '0.1em', color: '#b26a00', marginBottom: '1em', fontWeight:'bold' }}>
+									NOS FORMULES {' '}
+									<img src={blue_bubble} alt='blue geometric circle' style={{
+										height: '0.7em'
+									}} />
+								</Typography>
+								{
+									this.state.formulas !== null ?
+										<div style={{ marginBottom: '6em' }}>
+											{
+												<Grid container>
+													{
+														this.state.formulas.map(
+															/**
+															* 
+															* @param {FormulaEntity} item 
+															* @param {Number} index 
+															*/
+															(formula, index) => (
+																<Grid key={index} item xs>
+																	<IllicoFormula image={formula.picturePath} title={formula.name} description={formula.description} price={formula.price}
+																		onBasketAddClick={() => this.addFormulaToCart(formula)} />
+																</Grid>
+															))
+													}
+												</Grid>
+
+											}
+										</div>
+										: <div style={{ marginBottom: '6em' }}>
+											<CircularProgress />
+										</div>
+								}
+							</div>
+						</div>
+					</Slide>
+
+					<div>
+						{
+							!this.state.loaded ?
+								<div style={{ marginBottom: '5em' }}>
+									<CircularProgress />
+								</div>
+								: ''
+						}
+					</div>
+					<IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart} />
 				</div>
-				<IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart} />
+				:
+				<CircularProgress/>
+				}
+				
 
 
 				{/* Snackbars and alerts */}

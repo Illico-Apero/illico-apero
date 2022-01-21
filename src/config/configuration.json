@@ -2,7 +2,7 @@
     "server": {
         "host": "192.168.0.55",
         "port": 9412,
-        "baseUrl": "https://localhost:9412/api/v1/"
+        "baseUrl": "https://78.198.125.180:9412/api/v1/"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
@@ -27,8 +27,8 @@
         "isStoreOpened":"store/is-store-opened",
         "getStore":"store/get-store",
         "getIfValid":"promotion/get-if-valid",
-        "logVisit":"/visitor/log-visit"
+        "logVisit":"visitor/log-visit"
     },
-    "debug":true,
+    "debug":false,
     "maintenance":false
 }

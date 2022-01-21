@@ -27,6 +27,10 @@ export default class Utils {
         }
     }
 
+    static isAlcoholCategory(category) {
+        return category !== 'Soft';
+    }
+
     static getEmojiAccordingToCategory(category) {
         switch(category) {
             case 'Spiritueux':

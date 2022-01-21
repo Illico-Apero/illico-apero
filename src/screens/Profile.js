@@ -122,11 +122,11 @@ export default class Profile extends IllicoReactComponent {
               <div id="profile">
                 {this.state.orders !== null &&
                 this.state.orders.length !== 0 ? (
-                  <div id="orders" style={{ marginTop: "2em" }}>
+                  <div id="orders" style={{ marginTop: "2em", marginBottom: '6em' }}>
                     {
                       this.state.orders.slice(0).reverse().map((order, index) => (
                         <div id={'order-' + index} key={index} style={{marginBottom:'2em'}}>
-                          <Typography variant='h6' style={{ color:'#b26a00', marginBottom:'0.5em'}}>
+                          <Typography variant='body1' style={{ color:'#b26a00'}}>
                             Commande de {order.totalPrice.toFixed(2)}€ du {new Date(order.createdAt).toLocaleString()}
                           </Typography>
                           <div id='items-recap'>
@@ -141,7 +141,7 @@ export default class Profile extends IllicoReactComponent {
                                                   alt={orderFormula.formulaByFkFormula.name}
                                                   title={orderFormula.formulaByFkFormula.name}
                                                   image={`../img/products/${orderFormula.formulaByFkFormula.picturePath}`}
-                                                  style={{height:'65px'}}
+                                                  style={{height: '65px', width:'100px' }}
                                               />
                                               <Badge badgeContent={orderFormula.quantity} color="primary"/>
                                           </CardContent>
@@ -157,7 +157,7 @@ export default class Profile extends IllicoReactComponent {
                                                     alt={orderProduct.productByFkProduct.name}
                                                     title={orderProduct.productByFkProduct.name}
                                                     image={`../img/products/${orderProduct.productByFkProduct.picturePath}`}
-                                                    style={{height:'65px'}}
+                                                    style={{height: '65px', width:'100px' }}
                                                 />
                                                 <Badge badgeContent={orderProduct.quantity} color="primary"/>
                                             </CardContent>

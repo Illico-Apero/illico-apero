@@ -5,10 +5,10 @@ import { ThemeProvider } from '@material-ui/core/styles';
 
 import {BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-import Landing      from './screens/Landing';
-import Login        from './screens/Login';
-import Register     from './screens/Register';
-import Home         from './screens/Home';
+import Landing from './screens/Landing';
+import Login from './screens/Login';
+import Register from './screens/Register';
+import Home from './screens/Home';
 import DeliveryZone from './screens/DeliveryZone';
 import LegalTerms from './screens/LegalTerms';
 import ForgottenPassword from './screens/ForgottenPassword';
@@ -22,18 +22,17 @@ import configuration from './config/configuration.json';
 import { Alert } from '@material-ui/lab';
 import { Typography } from '@material-ui/core';
 
-//TODO : IF SERVER.APP.ISACCESSIBLE --> Return App. Otherwise return maintenance page
+
 function App() {
     return (
         <div>
         {
-            //TODO MAINTENANCE WITH SERVICE
             configuration.maintenance ?
             <div style={{marginRight:'auto', marginLeft:'auto'}}>
                 <Alert severity='error' elevation={3} style={{marginTop:'2em', marginBottom:'2em', marginLeft:'auto', marginRight:'auto', width:'290px', textAlign:'left'}}>
                     Le site d'Illico Apéro est actuellement en cours de maintenance. Veuillez réessayer plus tard.
                     Vous pouvez nous retrouver sur Uber Eats et Deliveroo ! (si notre boutique est ouverte).
-                    Vous pouvez nous contacter par mail à l'addresse suivante : illicoapero.serviceclient@gmail.com.
+                    Vous pouvez nous contacter par mail à l'adresse suivante : illicoapero.serviceclient@gmail.com.
                     Vous pouvez également nous contacter sur intagram ou facebook (@illico.apero.dijon)
                 </Alert> 
                 <Typography variant='body1' style={{textAlign:'center'}}>

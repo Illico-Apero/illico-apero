@@ -10,7 +10,7 @@ import FrontEndLogService from '../network/services/FrontEndLogService';
 import IllicoAskForConnection from '../components/IllicoAskForConnection';
 import Backdrop from '@material-ui/core/Backdrop';
 import { Alert } from '@material-ui/lab';
-import IllicoPriceRecapBottomBar from '../components/IllicoPriceRecapBottomBar';
+import IllicoBottomBarAlert from '../components/IllicoBottomBarAlert';
 import UserEntity from '../models/UserEntity';
 import IllicoAddresses from '../components/IllicoAddresses';
 import AddressService from '../network/services/AddressService';
@@ -25,6 +25,7 @@ import configuration from '../config/configuration.json'
 import MuiAlert from '@material-ui/lab/Alert';
 import PromotionService from '../network/services/PromotionService';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import IllicoExceptionallyClosed from '../components/IllicoExceptionallyClosed';
 
 const DELIVERY_PRICE = 2.99;
 
@@ -78,24 +79,10 @@ export default class Checkout extends IllicoReactComponent {
 					if (this.state.isUserLoggedIn) {
 						this.retrieveQuantityInCart(() => {
 							this.retrieveCart();
-							this.storeService.isStoreOpened((data) => {
-								if (data.status !== ApiResponse.GET_ERROR()) {
-									if (data.status === ApiResponse.GET_WARNING()) { // closed manually
-										console.warn("Store closed programmatically");
-										this.setState({ closedProgrammatically: true });
-										// TODO Show that site is disabled (fermeture exceptionnelle) : DISABLE BUTTON / DO NOT ALLOW TO PAY (paypal visible = false / whole page with warning above)
-									}
-									this.setState({ opened: data.response }, () => {
-										this.setState({ loaded: true });
-									});
-								}
-								else {
-									this.setState({ loaded: true });
-								}
-							});
+							this.retrieveStoreState();
 						});
 					} else {
-						this.setState({ loaded: true });
+						this.retrieveStoreState();
 					}
 				});
 			});
@@ -118,6 +105,25 @@ export default class Checkout extends IllicoReactComponent {
 			});
 		}
 	}
+	retrieveStoreState() {
+		this.storeService.isStoreOpened((data) => {
+			if (data.status !== ApiResponse.GET_ERROR()) {
+				if (data.status === ApiResponse.GET_WARNING()) { // closed manually
+					console.warn("Store closed programmatically");
+					this.setState({ closedProgrammatically: true });
+					// TODO Show that site is disabled (fermeture exceptionnelle) : DISABLE BUTTON / DO NOT ALLOW TO PAY (paypal visible = false / whole page with warning above)
+				}
+				this.setState({ opened: data.response }, () => {
+					this.setState({ loaded: true });
+				});
+			}
+			else {
+				this.setState({ loaded: true });
+			}
+		});
+	}
+
+
 	retrieveQuantityInCart(callback) { //TODO : code redundancy
 		Utils.handleEventuallyExpiredJwt(this.state.userEntity, () => {
 			this.cartService.getAmountIncart(this.state.userEntity, this.state.userEntity.jwt, /** @param {ApiResponse} data */(data) => {
@@ -230,6 +236,9 @@ export default class Checkout extends IllicoReactComponent {
 			color: '#fff',
 		}
 		return (
+			this.state.loaded ?
+			<>
+			{
 			(this.state.opened || configuration.debug) && !this.state.closedProgrammatically ?
 				<>
 					<IllicoSimpleAppBar to={previousPageRedirection} title='Livraison et paiement' />
@@ -249,238 +258,252 @@ export default class Checkout extends IllicoReactComponent {
 											{
 												this.state.cartEntity !== null && this.state.userEntity !== null ?
 													<div id='checkout-loaded'>
-														<div id='items-recap'>
-															{
-																this.isEverythingOKforCartOperations() ?
-																	<Grid container style={{ marginTop: '2em' }}>
-																		<Card elevation={4} style={cardRootStyle}>
-																			{
-																				//TODO : refactor
-																				this.state.cartEntity.cartFormulasByIdCart.map(
-																					(cartFormula, index) => (
-																						<CardContent key={index}>
-																							<CardMedia
-																								component="img"
-																								alt={cartFormula.formulaByFkFormula.name}
-																								title={cartFormula.formulaByFkFormula.name}
-																								image={`../img/products/${cartFormula.formulaByFkFormula.picturePath}`}
-																								style={{ height: '65px' }}
-																							/>
-																							<Badge badgeContent={cartFormula.quantity} color="primary" />
-																						</CardContent>
-																					)
-																				)
-																			}
-																			{
-																				this.state.cartEntity.cartProductsByIdCart.map(
-																					(cartProduct, index) => (
-																						<CardContent key={index}>
-																							<CardMedia
-																								component="img"
-																								alt={cartProduct.productByFkProduct.name}
-																								title={cartProduct.productByFkProduct.name}
-																								image={`../img/products/${cartProduct.productByFkProduct.picturePath}`}
-																								style={{ height: '65px' }}
-																							/>
-																							<Badge badgeContent={cartProduct.quantity} color="primary" />
-																						</CardContent>
-																					)
-																				)
-																			}
-																		</Card>
-																	</Grid>
-																	:
-																	''
-															}
-														</div>
-														<div id='address-area'>
-															<Typography variant='body1' style={{ marginTop: '0.3em', color: '#b26a00', marginBottom: '0.5em' }}>
-																Votre addresse de livraison :
-															</Typography>
-															{
-																this.state.userEntity !== null &&
-																	this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation !== null
-																	&& this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress !== null ?
-																	<div id='address-display'>
-																		<Typography variant='body1' id='identity' style={{ fontSize: '12px' }}>
-																			{
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.firstname + ' ' +
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.surname.toUpperCase()
-																			}
-																		</Typography>
-																		<Typography variant='body1' id='postal-address' style={{ fontSize: '12px' }}>
-																			{
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.streetNumber + ' ' +
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.street + ', ' +
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.postalCode + ' ' +
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.city
-																			}
-																		</Typography>
-																		<Typography variant='body1' id='phone' style={{ fontSize: '12px' }}>
-																			{
-																				this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.phone
-																			}
-																		</Typography>
-																	</div>
-																	:
-																	''
-															}
-														</div>
-														<div id='fixed-price-recap'>
-															{
-																this.isEverythingOKforCartOperations() ?
-																	<>
-																		<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '0.5em' }}>
-																			Récapitulatif
-																		</Typography>
-																		<>
-																			{/*TODO REDUNDANT */}
-																			{
-																				this.state.cartEntity.cartFormulasByIdCart.length > 0 ?
-																					<>
-																						<Typography variant='body1' style={{ color: '#b26a00', marginBottom: '1em' }}>
-																							Vos formules {' '}
-																							<img src={yellow_circle} alt='yellow geometric circles' style={{ height: '0.8em' }} />
-																						</Typography>
-																						<TableContainer component={Paper} style={{ width: '300px', margin: 'auto' }}>
-																							<Table size='small' style={{ marginRight: '1em' }}>
-																								<TableHead>
-																									<TableRow>
-																										<TableCell>Formule</TableCell>
-																										<TableCell align="right">Qté</TableCell>
-																										<TableCell align="right">Total</TableCell>
-																									</TableRow>
-																								</TableHead>
-																								<tbody>
-																									{
-																										this.state.cartEntity.cartFormulasByIdCart.map(
-																											(cartFormula, index) => (
-																												<TableRow key={index}>
-																													<TableCell>
-																														{cartFormula.formulaByFkFormula.name}
-																													</TableCell>
-																													<TableCell align='right'>
-																														{cartFormula.quantity}
-																													</TableCell>
-																													<TableCell align='right'>
-																														{(cartFormula.quantity * cartFormula.formulaByFkFormula.price).toFixed(2)}€
-																													</TableCell>
-																												</TableRow>
-																											)
-																										)
-																									}
-																								</tbody>
-																							</Table>
-																						</TableContainer>
-																					</>
-																					:
-																					''
-																			}
-																		</>
-																		<>
-																			{
-																				this.state.cartEntity.cartProductsByIdCart.length > 0 ?
-																					<>
-																						<Typography variant='body1' style={{ color: '#b26a00', marginTop: '2em', marginBottom: '1em' }}>
-																							Vos Boissons {' '}
-																							<img src={blue_bubble} alt='blue geometric circle' style={{ height: '0.7em' }} />
-																						</Typography>
-																						<TableContainer component={Paper} style={{ width: '300px', margin: 'auto' }}>
-																							<Table size='small' style={{ marginRight: '1em' }}>
-																								<TableHead>
-																									<TableRow>
-																										<TableCell>Boisson</TableCell>
-																										<TableCell align="right">Qté</TableCell>
-																										<TableCell align="right">Total</TableCell>
-																									</TableRow>
-																								</TableHead>
-																								<tbody>
-																									{
-																										this.state.cartEntity.cartProductsByIdCart.map(
-																											(cartProduct, index) => (
-																												<TableRow key={index}>
-																													<TableCell>
-																														{cartProduct.productByFkProduct.name}
-																													</TableCell>
-																													<TableCell align='right'>
-																														{cartProduct.quantity}
-																													</TableCell>
-																													<TableCell align='right'>
-																														{(cartProduct.quantity * cartProduct.productByFkProduct.price).toFixed(2)}€
-																													</TableCell>
-																												</TableRow>
-																											)
-																										)
-																									}
-																								</tbody>
-																							</Table>
-																						</TableContainer>
-																					</>
-																					:
-																					''
-																			}
-																		</>
-																	</>
-																	:
-																	''
-															}
-														</div>
-														<div id='delivery-fee'>
+													{
+														this.state.cartEntity.cartProductsByIdCart.length > 0 || this.state.cartEntity.cartFormulasByIdCart.length > 0 ?
 
-															<Typography variant='body1' style={{ marginBottom: '1em', marginTop: '1em', fontSize: '12px' }}>
-																Frais de livraison : {this.state.deliveryPrice.toFixed(2)}€
-															</Typography>
-														</div>
+														<div id='checkout-loaded-non-empty'>
+															<div id='items-recap'>
+																{
+																	this.isEverythingOKforCartOperations() ?
+																		<Grid container style={{ marginTop: '2em' }}>
+																			<Card elevation={4} style={cardRootStyle}>
+																				{
+																					//TODO : refactor
+																					this.state.cartEntity.cartFormulasByIdCart.map(
+																						(cartFormula, index) => (
+																							<CardContent key={index}>
+																								<CardMedia
+																									component="img"
+																									alt={cartFormula.formulaByFkFormula.name}
+																									title={cartFormula.formulaByFkFormula.name}
+																									image={`../img/products/${cartFormula.formulaByFkFormula.picturePath}`}
+																									style={{ height: '65px', width:'100px' }}
+																								/>
+																								<Badge badgeContent={cartFormula.quantity} color="primary" />
+																							</CardContent>
+																						)
+																					)
+																				}
+																				{
+																					this.state.cartEntity.cartProductsByIdCart.map(
+																						(cartProduct, index) => (
+																							<CardContent key={index}>
+																								<CardMedia
+																									component="img"
+																									alt={cartProduct.productByFkProduct.name}
+																									title={cartProduct.productByFkProduct.name}
+																									image={`../img/products/${cartProduct.productByFkProduct.picturePath}`}
+																									style={{ height: '65px', width:'100px' }}
+																								/>
+																								<Badge badgeContent={cartProduct.quantity} color="primary" />
+																							</CardContent>
+																						)
+																					)
+																				}
+																			</Card>
+																		</Grid>
+																		:
+																		''
+																}
+															</div>
+															<div id='address-area'>
+																<Typography variant='body1' style={{ marginTop: '0.3em', color: '#b26a00', marginBottom: '0.5em' }}>
+																	Votre adresse de livraison :
+																</Typography>
+																{
+																	this.state.userEntity !== null &&
+																		this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation !== null
+																		&& this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress !== null ?
+																		<div id='address-display'>
+																			<Typography variant='body1' id='identity' style={{ fontSize: '12px' }}>
+																				{
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.firstname + ' ' +
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.surname.toUpperCase()
+																				}
+																			</Typography>
+																			<Typography variant='body1' id='postal-address' style={{ fontSize: '12px' }}>
+																				{
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.streetNumber + ' ' +
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.street + ', ' +
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.postalCode + ' ' +
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.addressByFkAddress.city
+																				}
+																			</Typography>
+																			<Typography variant='body1' id='phone' style={{ fontSize: '12px' }}>
+																				{
+																					this.state.userEntity.userPersonalInformationsByFkUserPersonalInformation.phone
+																				}
+																			</Typography>
+																		</div>
+																		:
+																		''
+																}
+															</div>
+															<div id='fixed-price-recap'>
+																{
+																	this.isEverythingOKforCartOperations() ?
+																		<>
+																			<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '0.5em' }}>
+																				Récapitulatif
+																			</Typography>
+																			<>
+																				{/*TODO REDUNDANT */}
+																				{
+																					this.state.cartEntity.cartFormulasByIdCart.length > 0 ?
+																						<>
+																							<Typography variant='body1' style={{ color: '#b26a00', marginBottom: '1em' }}>
+																								Vos Formules {' '}
+																								<img src={yellow_circle} alt='yellow geometric circles' style={{ height: '0.8em' }} />
+																							</Typography>
+																							<TableContainer component={Paper} style={{ width: '300px', margin: 'auto' }}>
+																								<Table size='small' style={{ marginRight: '1em' }}>
+																									<TableHead>
+																										<TableRow>
+																											<TableCell>Formule</TableCell>
+																											<TableCell align="right">Qté</TableCell>
+																											<TableCell align="right">Total</TableCell>
+																										</TableRow>
+																									</TableHead>
+																									<tbody>
+																										{
+																											this.state.cartEntity.cartFormulasByIdCart.map(
+																												(cartFormula, index) => (
+																													<TableRow key={index}>
+																														<TableCell>
+																															{cartFormula.formulaByFkFormula.name}
+																														</TableCell>
+																														<TableCell align='right'>
+																															{cartFormula.quantity}
+																														</TableCell>
+																														<TableCell align='right'>
+																															{(cartFormula.quantity * cartFormula.formulaByFkFormula.price).toFixed(2)}€
+																														</TableCell>
+																													</TableRow>
+																												)
+																											)
+																										}
+																									</tbody>
+																								</Table>
+																							</TableContainer>
+																						</>
+																						:
+																						''
+																				}
+																			</>
+																			<>
+																				{
+																					this.state.cartEntity.cartProductsByIdCart.length > 0 ?
+																						<>
+																							<Typography variant='body1' style={{ color: '#b26a00', marginTop: '2em', marginBottom: '1em' }}>
+																								Vos Boissons {' '}
+																								<img src={blue_bubble} alt='blue geometric circle' style={{ height: '0.7em' }} />
+																							</Typography>
+																							<TableContainer component={Paper} style={{ width: '300px', margin: 'auto' }}>
+																								<Table size='small' style={{ marginRight: '1em' }}>
+																									<TableHead>
+																										<TableRow>
+																											<TableCell>Boisson</TableCell>
+																											<TableCell align="right">Qté</TableCell>
+																											<TableCell align="right">Total</TableCell>
+																										</TableRow>
+																									</TableHead>
+																									<tbody>
+																										{
+																											this.state.cartEntity.cartProductsByIdCart.map(
+																												(cartProduct, index) => (
+																													<TableRow key={index}>
+																														<TableCell>
+																															{cartProduct.productByFkProduct.name}
+																														</TableCell>
+																														<TableCell align='right'>
+																															{cartProduct.quantity}
+																														</TableCell>
+																														<TableCell align='right'>
+																															{(cartProduct.quantity * cartProduct.productByFkProduct.price).toFixed(2)}€
+																														</TableCell>
+																													</TableRow>
+																												)
+																											)
+																										}
+																									</tbody>
+																								</Table>
+																							</TableContainer>
+																						</>
+																						:
+																						''
+																				}
+																			</>
+																		</>
+																		:
+																		''
+																}
+															</div>
+															<div id='delivery-fee'>
 
-														<div id='total'>
-															{
-																this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
-																	<div style={{ marginTop: '1.5em' }}>
-																		<Alert severity='success' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
-																			Le code promotionnel {this.state.cartEntity.promotionByFkPromotion.promotionCode} de {this.state.cartEntity.promotionByFkPromotion.reductionInPercents}% est appliqué !
-																		</Alert>
-																	</div>
-																	:
-																	''
-															}
-															<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '1em', marginTop: '1em' }}>
-																Total&nbsp;:&nbsp;
+																<Typography variant='body1' style={{ marginBottom: '1em', marginTop: '1em', fontSize: '12px' }}>
+																	Frais de livraison : {this.state.deliveryPrice.toFixed(2)}€
+																</Typography>
+															</div>
+															<div id='total'>
 																{
 																	this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
-																		this.state.cartEntity.totalPriceWithPromotion.toFixed(2) + '€'
+																		<div style={{ marginTop: '1.5em' }}>
+																			<Alert severity='success' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
+																				Le code promotionnel {this.state.cartEntity.promotionByFkPromotion.promotionCode} de {this.state.cartEntity.promotionByFkPromotion.reductionInPercents}% est appliqué !
+																			</Alert>
+																			<Alert severity='info' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
+																					Total avant promotion (livraison comprise) : {(this.state.cartEntity.totalPrice + this.state.deliveryPrice).toFixed(2) + '€'}.
+																					Vous économisez {(this.state.cartEntity.totalPrice - this.state.cartEntity.totalPriceWithPromotion + this.state.deliveryPrice).toFixed(2) + '€ 🤑'}
+																			</Alert>
+																		</div>
 																		:
-																		this.state.cartEntity.totalPrice.toFixed(2) + '€'
+																		''
 																}
-															</Typography>
-														</div>
-														<div id='remark'>
-															<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '0.5em', marginTop: '1.5em' }}>
-																Une remarque ?
-															</Typography>
+																<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '1em', marginTop: '1em' }}>
+																	Total à régler&nbsp;:&nbsp;
+																	{
+																		this.state.cartEntity.promotionByFkPromotion !== null && this.state.cartEntity.totalPriceWithPromotion !== null ?
+																			(this.state.cartEntity.totalPriceWithPromotion + this.state.deliveryPrice).toFixed(2) + '€'
+																			:
+																			(this.state.cartEntity.totalPrice + this.state.deliveryPrice).toFixed(2) + '€'
+																	}
+																</Typography>
+															</div>
+															<div id='remark'>
+																<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '0.5em', marginTop: '1.5em' }}>
+																	Une remarque ?
+																</Typography>
 
-															<TextareaAutosize onChange={(event) => this.handleTextAreaChange(event)} style={{ width: '300px', height: '5em' }} placeholder='Si vous souhaitez ajouter une info au livreur... 👀' />
-														</div>
-														<div id='payment'>
-															<Typography variant='h4' style={{ marginTop: '1em', color: '#b26a00', marginBottom: '0.2em' }}>
-																Confirmer et payer
-															</Typography>
-															<div id='paypal'>
-																<div style={{ width: '300px', marginLeft: 'auto', marginRight: 'auto' }}>
-																	<Paypal userEntity={this.state.userEntity} cartEntity={this.state.cartEntity} paymentPlacedCallback={this.paymentPlacedCallback} />
+																<TextareaAutosize onChange={(event) => this.handleTextAreaChange(event)} style={{ width: '300px', height: '5em' }} placeholder='Si vous souhaitez ajouter une info au livreur... 👀' />
+															</div>
+															<div id='payment'>
+																<Typography variant='h4' style={{ marginTop: '1em', color: '#b26a00', marginBottom: '0.2em' }}>
+																	Confirmer et payer
+																</Typography>
+																<div id='paypal'>
+																	<div style={{ width: '300px', marginLeft: 'auto', marginRight: 'auto' }}>
+																		<Paypal userEntity={this.state.userEntity} cartEntity={this.state.cartEntity} paymentPlacedCallback={this.paymentPlacedCallback} />
+																	</div>
 																</div>
 															</div>
-														</div>
-														<div id='floating-price-recap' style={{ marginTop: '4em' }}>
-															{
-																this.state.cartEntity != null && this.state.cartEntity.totalPrice !== null ?
-																	this.state.cartEntity.promotionByFkPromotion !== null & this.state.cartEntity.totalPriceWithPromotion !== null ?
-																		<IllicoPriceRecapBottomBar price={this.state.cartEntity.totalPriceWithPromotion + this.state.deliveryPrice} />
+															<div id='floating-price-recap' style={{ marginTop: '4em' }}>
+																{
+																	this.state.cartEntity != null && this.state.cartEntity.totalPrice !== null ?
+																		this.state.cartEntity.promotionByFkPromotion !== null & this.state.cartEntity.totalPriceWithPromotion !== null ?
+																			<IllicoBottomBarAlert text={'Total avec livraison : ' + (this.state.cartEntity.totalPriceWithPromotion + this.state.deliveryPrice).toFixed(2) + '€'} />
+																			:
+																			<IllicoBottomBarAlert text={'Total avec livraison : ' + (this.state.cartEntity.totalPrice + this.state.deliveryPrice).toFixed(2) + '€'} />
 																		:
-																		<IllicoPriceRecapBottomBar price={this.state.cartEntity.totalPrice + this.state.deliveryPrice} />
-																	:
-																	''
-															}
+																		''
+																}
+															</div>
 														</div>
+														:
+														<Alert severity='info' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
+															Votre panier est vide 😭 !
+														</Alert>
+													}
+
 													</div>
 													:
 													<CircularProgress />
@@ -518,21 +541,15 @@ export default class Checkout extends IllicoReactComponent {
 				</>
 				:
 				this.state.closedProgrammatically ?
-					<Alert severity="error" elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
-						Les commandes sont fermées de manière exceptionnelle. Impossible de passer commande pour l'instant.
-						Suivez-nous sur nos réseaux sociaux pour plus d'informations :
-						<Typography variant='body1' style={{ textAlign: 'center' }}>
-							<br />
-							<a href='https://www.facebook.com/illico.apero.dijon'>Facebook</a>
-							<br />
-							<br />
-							<a href='https://www.instagram.com/illico.apero.dijon/?hl=fr'>Instagram</a>
-						</Typography>
-					</Alert>
+					<IllicoExceptionallyClosed/>
 					:
 					<Alert severity='error' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '290px', textAlign: 'left' }}>
 						Nous sommes actuellement fermés 🥺. Revenez plus tard !
 					</Alert>
+			}
+			</>
+			:
+			<CircularProgress/>
 		)
 	}
 }

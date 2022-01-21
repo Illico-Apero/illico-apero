@@ -67,7 +67,7 @@ export default class IllicoCartItem extends React.Component {
     render() {
         const cardRootStyle = {
             display:'flex',
-            width:420,
+            width:300,
             marginRight:'auto',
             marginLeft:'auto',
             marginBottom:'2em'
@@ -81,7 +81,8 @@ export default class IllicoCartItem extends React.Component {
         }
 
         const cardImageStyle = {
-            width:200,
+            width:150,
+            maxHeight:180,
             aspectRatio:1/1,
         }
 
@@ -95,14 +96,16 @@ export default class IllicoCartItem extends React.Component {
                     style={cardImageStyle}
                 />
                 <CardContent style={cardDetailsStyle}>
-                    <Typography variant='body1' style= {{ color:'#b26a00'}}>
-                    {this.state.itemName}
-                    </Typography>                    
-                    <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
-                        {(this.state.price).toFixed(2)}€
-                    </Typography>
-                        
-                    <div style={{position:'absolute', bottom:5, flexDirection:'row'}}>
+
+                    <div style={{marginBottom:'1em'}}>
+                        <Typography variant='body1' style= {{ color:'#b26a00'}}>
+                        {this.state.itemName}
+                        </Typography>                    
+                        <Typography variant='body1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00',  fontSize:'0.8em', marginBottom:'0.3em'}}>
+                            {(this.state.price).toFixed(2)}€
+                        </Typography>
+                    </div>
+                    <div style={{bottom:0, flexDirection:'row'}}>
                         <FormControl variant='outlined' size='small'>
                             <InputLabel>Qté</InputLabel>
                             <Select 
@@ -120,7 +123,7 @@ export default class IllicoCartItem extends React.Component {
                                 )}
                             </Select>
                         </FormControl>
-                        <span style={{marginLeft:'1em'}}>
+                        <span style={{position:'absolute', marginLeft:'1em'}}>
                             <IconButton color='primary' aria-label='Suppr.' onClick={() => this.props.onQuantityChange(
                                 null, this.state.item, this.state.index, this.state.isCartFormula)}
                             >

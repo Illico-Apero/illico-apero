@@ -114,7 +114,7 @@ class IllicoProduct extends React.Component
                                 </Alert>
                             </Collapse>
                             <IconButton disabled={this.state.openProductInfo} onClick={() => {this.setOpenProductInfo(true)}}>
-                                <InfoIcon fontSize='inherit' color='primary'/>
+                                <InfoIcon fontSize='inherit' color='secondary'/>
                             </IconButton>
                         </div>
                         :

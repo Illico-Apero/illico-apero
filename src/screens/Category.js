@@ -24,6 +24,7 @@ import { Link } from 'react-router-dom';
 import FrontEndLogService from '../network/services/FrontEndLogService';
 import { Alert } from '@material-ui/lab';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import IllicoBottomBarAlert from '../components/IllicoBottomBarAlert';
 
 //TODO : Stock handling (Formula (home.js) & products (category.js))
 /**
@@ -215,6 +216,7 @@ export default class Category extends IllicoReactComponent {
 						<IllicoSimpleAppBar to={previousPageRedirection} title={Utils.getCategoryPluralWith_LES_inFrontAndEmoji(this.state.category)} />
 						{
 							this.state.products !== null ?
+							<>
 								<div id='products' style={{ marginBottom: '5em' }}>
 									<Grid container>
 										{
@@ -227,10 +229,10 @@ export default class Category extends IllicoReactComponent {
 										}
 									</Grid>
 								</div>
+							</>
 								:
 								<CircularProgress />
 						}
-
 					</div>
 				</Fade>
 				<IllicoBottomNavigation bottomNavigationValue={this.state.bottomNavigationValue} quantityInCart={this.state.quantityInCart} />
