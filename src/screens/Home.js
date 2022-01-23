@@ -145,6 +145,9 @@ export default class Home extends IllicoReactComponent {
 	}
 
 	addFormulaToCart(formula) {
+		if(!formula.available) {
+			return;
+		}
 		if (this.state.isUserLoggedIn) {
 			Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
 				if (refreshedUserEntity !== null) {
@@ -261,7 +264,7 @@ export default class Home extends IllicoReactComponent {
 								</Typography>
 								{
 									this.state.categories !== null ?
-										<Grid container>
+										<Grid container spacing={2} xs={12}>
 											{
 												this.state.categories.map((category, index) => (
 													<Grid key={index} item xs>
@@ -297,7 +300,7 @@ export default class Home extends IllicoReactComponent {
 									this.state.formulas !== null ?
 										<div style={{ marginBottom: '6em' }}>
 											{
-												<Grid container>
+												<Grid container spacing={3} xs={12}>
 													{
 														this.state.formulas.map(
 															/**
@@ -307,7 +310,7 @@ export default class Home extends IllicoReactComponent {
 															*/
 															(formula, index) => (
 																<Grid key={index} item xs>
-																	<IllicoFormula image={formula.picturePath} title={formula.name} description={formula.description} price={formula.price}
+																	<IllicoFormula image={formula.picturePath} title={formula.name} description={formula.description} price={formula.price} available={formula.available}
 																		onBasketAddClick={() => this.addFormulaToCart(formula)} />
 																</Grid>
 															))

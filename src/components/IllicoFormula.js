@@ -21,15 +21,17 @@ class IllicoFormula extends React.Component
 {
     render()
     {
+        const disabledBackground = this.props.available ? {} : {backgroundColor:'#cfcfcf'};
+
         return(
             <div style= {{
                 marginBottom:'2em',
                 aspectRatio:1/2,
                 width:300,
                 marginLeft: 'auto',
-                marginRight: 'auto'
+                marginRight: 'auto',
             }}>
-                <Card elevation={3}>
+                <Card elevation={3} style={disabledBackground}>
                     <CardMedia
                         component="img"
                         alt={this.props.image}
@@ -41,6 +43,14 @@ class IllicoFormula extends React.Component
                         }}
                     />
                     <CardContent>
+                        {
+                            !this.props.available ?
+                            <Typography variant='h6' gutterBottom style= {{ paddingTop:'0.1em', color:'#f72d05', fontWeight:'Bold', textAlign:'left'}}>
+                                Ce produit est victime de son succès... 😫❌
+                            </Typography>
+                            :
+                            ''
+                        }
                         <Typography variant='subtitle1' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontWeight:'Bold', textAlign:'left'}}>
                             {this.props.title}
                         </Typography>
@@ -53,7 +63,7 @@ class IllicoFormula extends React.Component
                     </CardContent>
                     <Divider/>
                     <CardActionArea onClick={this.props.onBasketAddClick}>
-                        <IllicoAddToBasket/>
+                        <IllicoAddToBasket available={this.props.available}/>
                     </CardActionArea>
                 </Card>
             </div>

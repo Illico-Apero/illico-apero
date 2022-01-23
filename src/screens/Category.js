@@ -142,6 +142,9 @@ export default class Category extends IllicoReactComponent {
 
 	// TODO : BOTH FOR HOME AND CATEGORY/JS : REFACTOR / INHERIT FROM GENERIC COMPONENT and pass param 
 	addProductToCart(product) {
+		if(!product.available) {
+			return;
+		}
 		if (this.state.isUserLoggedIn) {
 			Utils.handleEventuallyExpiredJwt(this.state.userEntity, (refreshedUserEntity) => {
 				if (refreshedUserEntity !== null) {
@@ -218,7 +221,7 @@ export default class Category extends IllicoReactComponent {
 							this.state.products !== null ?
 							<>
 								<div id='products' style={{ marginBottom: '5em' }}>
-									<Grid container>
+									<Grid container spacing={3} xs={12}>
 										{
 											this.state.products.map(
 												(product, index) => (

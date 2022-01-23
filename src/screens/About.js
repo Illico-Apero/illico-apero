@@ -26,8 +26,10 @@ export default class About extends IllicoReactComponent {
 			<Fade in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
 				<div>
 					<IllicoSimpleAppBar to={previousPageRedirection} title='À propos' />
-					<Typography variant='h1'>
-						A propos : TODO
+					<Typography variant='body1' style={{width:'70%', marginRight:'auto', marginLeft:'auto'}}>
+						Illico Apéro est une société de vente en livraison de boissons pour l'apéritif ! Notre service propose de vous livrer
+						alcools, softs et snacks en 30 minutes (en moyenne) sur Dijon et ses alentours !
+						Actuellement au nombre de 3, nos coursiers se feront un plaisir de vous livrer pendant vos soirées. Alors n'hésitez plus !
 					</Typography>
 				</div>
 			</Fade>

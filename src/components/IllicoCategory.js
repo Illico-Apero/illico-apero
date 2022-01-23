@@ -28,7 +28,7 @@ class IllicoCategory extends React.Component
             }}>
                 <NoDecorationLink to={this.props.to}>
                     <Paper elevation={3} >
-                        <img src={`../img/products/categories/${img}.jpg`} 
+                        <img src={`../img/products/categories/${img}.png`} 
                             alt={this.props.image}
                             style={{
                                 aspectRatio:1/1,

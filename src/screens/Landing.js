@@ -108,8 +108,8 @@ export default class Landing extends IllicoReactComponent {
 							</Slide>
 							<Typography variant='subtitle1' style={{ whiteSpace: 'pre-line' }}>
 								Notre mission ?{'\n'}
-								Vous livrer de l'alcool sur l'agglomération de Dijon,{'\n'}
-								entre <b>{this.state.hours[0]} et {this.state.hours[1]}</b> du <b>{this.state.days[0]} au {this.state.days[1]}</b>.
+								Vous livrer de l'alcool sur l'agglomération de Dijon{'\n'} en 30 minutes* ! {'\n'}
+								Service ouvert entre <b>{this.state.hours[0]} et {this.state.hours[1]}</b> du <b>{this.state.days[0]} au {this.state.days[1]}</b>.
 							</Typography>
 							{ // displays a green or red alert. 
 								(this.state.opened || configuration.debug) && !this.state.closedProgrammatically ?
@@ -148,7 +148,7 @@ export default class Landing extends IllicoReactComponent {
 									Illico Apéro - Vente d'alcool en livraison à Dijon.
 								</Typography>
 								<Typography variant='body1' style={{ fontStyle: 'italic', fontSize: '10px' }}>
-									Livraison sur Dijon et ses alentours en 30 minutes.
+									*Livraison sur Dijon et ses alentours en 30 minutes en moyenne.
 								</Typography>
 								<Typography variant='body1' style={{ fontStyle: 'italic', fontSize: '10px' }}>
 									Vente de bières, spiritueux, champagnes, vins et boissons sur Dijon.

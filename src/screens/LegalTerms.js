@@ -31,10 +31,24 @@ export default class LegalTerms extends IllicoReactComponent {
 		return (
 			<Fade in={this.state.loaded} mountOnEnter unmountOnExit timeout={300}>
 				<div>
-					<IllicoSimpleAppBar to={previousPageRedirection} title='Mentions légales (CGV/CGU)' />
-					<Typography variant='h1'>
-						Legal Terms : TODO
+					<IllicoSimpleAppBar to={previousPageRedirection} title='Mentions légales' />
+
+					<Typography variant='body1' style={{marginBottom:'2em'}}>
+					Illico Apéro permet la vente en ligne d'alcools et de produits apéritifs en livraison rapide.
+					Nous intervenons sur l'agglomération de Dijon et alentours, les addresses éligibles à la livraison sont indiquées à l'inscription sur la page suivante : &nbsp;
+					 <a href="https://78.198.125.180:3000/delivery-zone">Zone de livraison</a>
 					</Typography>
+
+
+					<Typography variant='h4' style={{marginBottom:'1em'}}>
+						Conditions générales d'utilisation
+					</Typography>
+					<iframe title='cgu' src="/pdf/cgu.pdf" width="90%" height="600px" style={{marginBottom:'5em'}}/>
+
+					<Typography variant='h4' style={{marginBottom:'1em'}}>
+						Conditions générales de vente
+					</Typography>
+					<iframe title='cgu' src="/pdf/cgv.pdf" width="90%" height="600px" style={{marginBottom:'5em'}}/>
 				</div>
 			</Fade>
 		)

@@ -12,7 +12,6 @@ export default class DeliveryZone extends IllicoReactComponent {
 		super(props);
 		this.state = {
 			loaded: false,
-			loadingMap: true
 		}
 	}
 
@@ -36,12 +35,8 @@ export default class DeliveryZone extends IllicoReactComponent {
 			<div>
 				<IllicoSimpleAppBar to={deliveryZoneRedirectState} title='Zone de livraison éligible' />
 				<div>
-					{
-						this.state.loadingMap ?
-							(<CircularProgress />) : null
-					}
 				</div>
-				<iframe title='Zone de livraison' src='https://www.google.com/maps/d/u/7/embed?mid=1YcDz6iXrPTfl-pG2Maao8EnNaZoxNnYL' width='320' height='500' style={{ marginTop: '1em' }} onLoad={() => this.setState({ loadingMap: false })} />
+				<img style={{maxWidth:'100%', maxHeight:'100%'}} alt='Zone de livraison' src='/img/delivery_zone.png'/>
 			</div>
 		)
 	}

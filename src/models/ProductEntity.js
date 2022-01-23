@@ -12,8 +12,9 @@ export default class ProductEntity {
      * @param {String} origin
      * @param {Number} stock 
      * @param {String} picturePath 
+     * @param {Boolean} available
      */
-    constructor(idProduct, name, description, price, volume, category, type, origin, stock, picturePath) {
+    constructor(idProduct, name, description, price, volume, category, type, origin, stock, picturePath, available) {
             this.idProduct = idProduct;
             this.name = name;
             this.description = description;
@@ -24,5 +25,6 @@ export default class ProductEntity {
             this.origin = origin;
             this.stock = stock;
             this.picturePath = picturePath;
+            this.available = available;
         }
 }

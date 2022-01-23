@@ -52,6 +52,8 @@ class IllicoProduct extends React.Component
     {
         /** @type {ProductEntity} */
         const product = this.props.product;
+        const disabledBackground = product.available ? {} : {backgroundColor:'#cfcfcf'};
+
         return(
             <div style= {{
                 marginBottom:'2em',
@@ -60,7 +62,7 @@ class IllicoProduct extends React.Component
                 marginLeft: 'auto',
                 marginRight: 'auto'
             }}>
-                <Card elevation={3}>
+                <Card elevation={3} style={disabledBackground}>
                         <img
                             src={`../img/products/${product.picturePath}`}
                             alt={product.picturePath}
@@ -76,6 +78,15 @@ class IllicoProduct extends React.Component
                         this.state.imageLoaded ? '' : <CircularProgress/>
                     }
                     <CardContent>
+                    {
+                            !product.available ?
+                            <Typography variant='h6' gutterBottom style= {{ paddingTop:'0.1em', color:'#f72d05', fontWeight:'Bold', textAlign:'left'}}>
+                                Ce produit est victime de son succès...
+                            </Typography>
+                            :
+                            ''
+                    }
+
                     <Typography variant='subtitle1' style= {{ paddingTop:'0.1em', color:'#b26a00',fontWeight:'Bold', textAlign:'left'}}>
                         {product.name}
                     </Typography>
@@ -93,6 +104,15 @@ class IllicoProduct extends React.Component
                         product.origin !== null ?
                         <Typography variant='subtitle2' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', textAlign:'left'}}>
                             {product.origin}
+                        </Typography>
+                        :
+                        ''
+                    }
+
+                    {
+                        product.volume !== null ?
+                        <Typography variant='subtitle2' gutterBottom style= {{ paddingTop:'0.1em', color:'#b26a00', fontSize:'0.9em', textAlign:'left'}}>
+                            {product.volume}
                         </Typography>
                         :
                         ''
@@ -130,7 +150,7 @@ class IllicoProduct extends React.Component
                     </CardContent>
                     <Divider/>
                     <CardActionArea onClick={this.props.onBasketAddClick}>
-                        <IllicoAddToBasket/>
+                        <IllicoAddToBasket available={product.available}/>
                     </CardActionArea>
                 </Card>
             </div>

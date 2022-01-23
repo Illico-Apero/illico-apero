@@ -22,6 +22,8 @@ export default class Utils {
                 return 'Bières';
             case 'Soft':
                 return 'Softs';
+            case 'Snack':
+                return 'Snacks';
             default:
                 return 'Spiritueux';
         }
@@ -45,6 +47,8 @@ export default class Utils {
                 return '🍺';
             case 'Soft':
                 return '🥤';
+            case 'Snack':
+                return '🥨'
             default:
                 return '🥃';
         }

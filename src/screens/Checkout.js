@@ -77,7 +77,7 @@ export default class Checkout extends IllicoReactComponent {
 			this.setState({ userEntity: JSON.parse(localStorage.getItem('userEntity')) }, () => {
 				this.setState({ isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn')) }, () => {
 					if (this.state.isUserLoggedIn) {
-						this.retrieveQuantityInCart(() => {
+						this.retrieveQuantityInCart(() => { // This order must be kept as it is. When we retrieve quantity in cart, we do proceed to operations on the cart itself.
 							this.retrieveCart();
 							this.retrieveStoreState();
 						});
@@ -395,7 +395,7 @@ export default class Checkout extends IllicoReactComponent {
 																					this.state.cartEntity.cartProductsByIdCart.length > 0 ?
 																						<>
 																							<Typography variant='body1' style={{ color: '#b26a00', marginTop: '2em', marginBottom: '1em' }}>
-																								Vos Boissons {' '}
+																								Vos Produits {' '}
 																								<img src={blue_bubble} alt='blue geometric circle' style={{ height: '0.7em' }} />
 																							</Typography>
 																							<TableContainer component={Paper} style={{ width: '300px', margin: 'auto' }}>
