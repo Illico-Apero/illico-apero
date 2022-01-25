@@ -27,8 +27,8 @@
         "isStoreOpened":"store/is-store-opened",
         "getStore":"store/get-store",
         "getIfValid":"promotion/get-if-valid",
-        "logVisit":"/visitor/log-visit"
+        "logVisit":"visitor/log-visit"
     },
-    "debug":true,
+    "debug":false,
     "maintenance":false
 }

@@ -1,8 +1,8 @@
 {
     "server": {
-        "url": "TODO",
+        "host": "https://illapp.fr",
         "port": 9412,
-        "baseUrl": "https://TODO:9412/api/v1"
+        "baseUrl": "https://illapp.fr:9412/api/v1"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
@@ -27,7 +27,7 @@
         "isStoreOpened":"store/is-store-opened",
         "getStore":"store/get-store",
         "getIfValid":"promotion/get-if-valid",
-        "logVisit":"/visitor/log-visit"
+        "logVisit":"visitor/log-visit"
     },
     "debug":false,
     "maintenance":false

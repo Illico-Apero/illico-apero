@@ -1,8 +1,8 @@
 {
     "server": {
-        "host": "192.168.0.55",
+        "host": "https://illapp.fr",
         "port": 9412,
-        "baseUrl": "https://78.198.125.180:9412/api/v1/"
+        "baseUrl": "https://illapp.fr:9412/api/v1/"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
