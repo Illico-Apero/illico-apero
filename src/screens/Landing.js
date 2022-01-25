@@ -1,155 +1,167 @@
-import React, { Component } from "react";
-import styled, { css } from "styled-components";
-import CatalogueButton from "../components/CatalogueButton";
-import InscriptionButton from "../components/InscriptionButton";
+import React from 'react';
 
-function Landing(props) {
-  return (
-    <Container
-        style=
-        {{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-        }}>
+import Typography from '@material-ui/core/Typography';
+import Slide from '@material-ui/core/Slide';
 
-        <IllicoBgStack>
-        <svg
-          viewBox="0 0 135.93 132.19"
-          style={{
-            top: 0,
-            width: 136,
-            height: 132,
-            opacity: 0.43,
-          }}>
-          <ellipse
-            stroke="rgba(230, 230, 230,1)"
-            strokeWidth={0}
-            fill="rgba(255,222,170,1)"
-            cx={68}
-            cy={66}
-            rx={68}
-            ry={66}
-          ></ellipse>
-        </svg>
-        <IllicoLogo src={require("../assets/images/Logo_v11.png")}></IllicoLogo>
-      </IllicoBgStack>
-      <Welcome>Bienvenue chez Illico Apéro !</Welcome>
-      <GeneralInfos>
-        Vente d&#39;alcool en livraison{"\n"}sur l&#39;agglomération de Dijon{" "}
-        {"\n"}entre [hh:mm] et [hh:mm]{"\n"}du [J] au [J]
-      </GeneralInfos>
-      <OpeningInfosStack>
-        <OpeningInfos>
-          Nous sommes actuellement ouvert,{"\n"}consultez dès maintenant notre
-          catalogue !
-        </OpeningInfos>
-        <OpeningInfosBg></OpeningInfosBg>
-      </OpeningInfosStack>
-      <CatalogueButton
-        style={{
-          height: 45,
-          width: 210,
-          marginTop: 55,
-          marginLeft: 83,
-        }}
-      ></CatalogueButton>
-      <InscriptionButton
-        style={{
-          height: 44,
-          width: 212,
-          marginTop: 16,
-          alignSelf: "center",
-        }}
-      ></InscriptionButton>
-      <DejaInscrit>Déjà inscrit ?</DejaInscrit>
-    </Container>
-  );
+import IllicoButton from '../components/IllicoButton';
+import IllicoLogo from '../components/IllicoLogo';
+
+import Opened from '../components/Landing/Opened';
+import Closed from '../components/Landing/Closed';
+import StyledLink from '../components/Generic/StyledLink';
+import NoDecorationLink from '../components/Generic/NoDecorationLink';
+import IllicoAudio from '../utils/IllicoAudio';
+import StoreService from '../network/services/StoreService';
+import StoreEntity from '../models/StoreEntity';
+
+import ApiResponse from '../models/api/ApiResponse';
+import { CircularProgress } from '@material-ui/core';
+import configuration from '../config/configuration.json'
+import { Alert } from '@material-ui/lab';
+import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import IllicoExceptionallyClosed from '../components/IllicoExceptionallyClosed';
+
+export default class Landing extends IllicoReactComponent {
+
+	constructor(props) {
+		super(props);
+		this.state = {
+			loaded: false,
+			isUserLoggedIn: false,
+			opened: false,
+			closedProgrammatically: false,
+			hours: [],
+			days: []
+		}
+		if (configuration.debug) console.warn('app is in debug mode');
+		this.storeService = new StoreService();
+	}
+
+	componentDidMount() {
+		this.setState({ isUserLoggedIn: JSON.parse(localStorage.getItem('isUserLoggedIn')) }, () => {
+			this.storeService.isStoreOpened((data) => {
+				if (data.status !== ApiResponse.GET_ERROR()) {
+					if (data.status === ApiResponse.GET_WARNING()) {
+						console.warn("Store closed programmatically");
+						this.setState({ closedProgrammatically: true });
+					}
+					this.setState({ opened: data.response }, () => {
+						this.storeService.getStore(
+							/**
+							 * 
+							 * @param {StoreEntity} data 
+							 */
+							(data) => {
+								if (data.status === ApiResponse.GET_SUCCESS()) {
+									this.state.hours.push(data.response.openHour.slice(0, -3));
+									this.state.hours.push(data.response.closeHour.slice(0, -3));
+									this.state.days.push(data.response.daysAsList[0]);
+									this.state.days.push(data.response.daysAsList[data.response.daysAsList.length - 1]);
+									this.setState({ loaded: true });
+								}
+							})
+					});
+				}
+				else {
+					this.setState({ loaded: true });
+				}
+			})
+		});
+	}
+
+	render() {
+		const registerRedirectState = {
+			pathname: '/register',
+			state: {
+				backUrl: '/',
+				slideDirection: 'left'
+			}
+		}
+		const homeRedirectState = {
+			pathname: '/home',
+			state: {
+				backUrl: '/',
+				slideDirection: 'left'
+			}
+		}
+		const loginRedirectState = {
+			pathname: '/login',
+			state: {
+				backUrl: '/',
+				slideDirection: 'left'
+			}
+		}
+		return (
+			<div>
+				{
+					this.state.loaded ?
+						<div>
+							<Typography variant='h3' gutterBottom
+								style={{
+									paddingTop: '0.1em',
+									color: '#b26a00'
+								}}>
+								Bienvenue !
+							</Typography>
+							<Slide direction='right' in={this.state.loaded} mountOnEnter unmountOnExit timeout={800}>
+								<IllicoLogo style={{ marginBottom: '0.4em' }} />
+							</Slide>
+							<Typography variant='subtitle1' style={{ whiteSpace: 'pre-line' }}>
+								Notre mission ?{'\n'}
+								Vous livrer de l'alcool sur l'agglomération de Dijon{'\n'} en 30 minutes* ! {'\n'}
+								Service ouvert entre <b>{this.state.hours[0]} et {this.state.hours[1]}</b> du <b>{this.state.days[0]} au {this.state.days[1]}</b>.
+							</Typography>
+							{ // displays a green or red alert. 
+								(this.state.opened || configuration.debug) && !this.state.closedProgrammatically ?
+									<Opened /> :
+									this.state.closedProgrammatically ?
+										<IllicoExceptionallyClosed/>
+										:
+										<Closed />
+							}
+
+							<NoDecorationLink to={homeRedirectState}>
+								<IllicoButton color='primary' text='Catalogue' onClick={() => IllicoAudio.playTapAudio()} />
+							</NoDecorationLink>
+
+							{
+								this.state.isUserLoggedIn ?
+									null
+									:
+									<div>
+										<NoDecorationLink to={registerRedirectState}>
+											<IllicoButton color='primary' text='Inscription' onClick={() => IllicoAudio.playTapAudio()} />
+										</NoDecorationLink>
+										<div onClick={() => IllicoAudio.playTapAudio()}>
+											<StyledLink to={loginRedirectState}>Déjà inscrit ?</StyledLink>
+										</div>
+									</div>
+							}
+							<div id='footer' style={{
+								marginTop: '1em',
+								padding: '1em',
+								position: 'relative',
+								bottom: 0,
+								left: 0
+							}}>
+								<Typography variant='body1' style={{ fontStyle: 'italic', fontSize: '10px' }}>
+									Illico Apéro - Vente d'alcool en livraison à Dijon.
+								</Typography>
+								<Typography variant='body1' style={{ fontStyle: 'italic', fontSize: '10px' }}>
+									*Livraison sur Dijon et ses alentours en 30 minutes en moyenne.
+								</Typography>
+								<Typography variant='body1' style={{ fontStyle: 'italic', fontSize: '10px' }}>
+									Vente de bières, spiritueux, champagnes, vins et boissons sur Dijon.
+								</Typography>
+								<Typography variant='body1' style={{ fontSize: '14px', marginTop:'1em' }}>
+									L'abus d'alcool est dangereux pour la santé, à consommer avec modération.
+								</Typography>
+							</div>
+						</div>
+						:
+						<CircularProgress />
+				}
+			</div>
+		);
+	}
 }
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const IllicoLogo = styled.img`
-  top: 6px;
-  width: 122px;
-  height: 122px;
-  position: absolute;
-  left: 7px;
-  object-fit: contain;
-`;
-
-const IllicoBgStack = styled.div`
-  width: 136px;
-  height: 132px;
-  margin-top: 153px;
-  margin-left: 120px;
-  position: relative;
-`;
-
-const Welcome = styled.span`
-  font-family: Nunito;
-  font-style: normal;
-  font-weight: 400;
-  color: rgba(220, 145, 96, 1);
-  height: 33px;
-  width: 263px;
-  font-size: 20px;
-  margin-top: -199px;
-  align-self: center;
-`;
-
-const GeneralInfos = styled.span`
-  font-family: Nunito;
-  font-style: normal;
-  font-weight: 400;
-  color: #121212;
-  font-size: 15px;
-  text-align: center;
-  margin-top: 195px;
-  margin-left: 91px;
-`;
-
-const OpeningInfos = styled.span`
-  font-family: Nunito;
-  top: 5px;
-  position: absolute;
-  font-style: normal;
-  font-weight: 400;
-  color: #121212;
-  font-size: 15px;
-  text-align: center;
-  left: 6px;
-`;
-
-const OpeningInfosBg = styled.div`
-  top: 0px;
-  width: 299px;
-  height: 54px;
-  position: absolute;
-  background-color: rgba(128, 245, 53, 1);
-  opacity: 0.16;
-  left: 0px;
-`;
-
-const OpeningInfosStack = styled.div`
-  width: 299px;
-  height: 54px;
-  margin-top: 41px;
-  margin-left: 38px;
-  position: relative;
-`;
-
-const DejaInscrit = styled.span`
-  font-family: Nunito;
-  font-style: normal;
-  font-weight: 700;
-  color: rgba(74, 144, 226, 1);
-  text-decoration-line: underline;
-  margin-top: 15px;
-  align-self: center;
-`;
-
-export default Landing;

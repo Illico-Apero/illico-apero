@@ -1,0 +1,34 @@
+{
+    "server": {
+        "host": "192.168.0.55",
+        "port": 9412,
+        "baseUrl": "https://localhost:9412/api/v1/"
+    },
+    "endpoints": {
+        "getDeliveryRadius": "address/get-delivery-radius",
+        "signUp": "user/sign-up",
+        "signIn": "user/sign-in",
+        "refreshToken": "user/refresh-token",
+        "testToken": "user/test-token",
+        "saveLog": "log/save",
+        "getCategories": "product/get-categories",
+        "getProducts": "product/get-products",
+        "getFormulas": "formula/get-formulas",
+        "addProductToCart": "cart/add-product",
+        "addFormulaToCart": "cart/add-formula",
+        "getAmountInCart": "cart/amount-in-cart",
+        "getCart": "cart/get-cart",
+        "saveCart":"cart/save-cart",
+        "clearCart":"cart/clear-cart",
+        "applyPromotion":"cart/apply-promotion",
+        "changeAddress":"address/change-address",
+        "placeOrder":"order/place-order",
+        "getOrders":"order/get-orders",
+        "isStoreOpened":"store/is-store-opened",
+        "getStore":"store/get-store",
+        "getIfValid":"promotion/get-if-valid",
+        "logVisit":"/visitor/log-visit"
+    },
+    "debug":true,
+    "maintenance":false
+}
