@@ -326,6 +326,15 @@ export default class Register extends IllicoReactComponent {
 			width: '16em',
 			zIndex: this.props.useNegativeZIndex ? -1 : 0
 		}
+
+		const textfieldStyle = {
+				marginTop: '0.7em',
+				marginBottom: '0.7em',
+				width: '16em',
+				zIndex: this.props.useNegativeZIndex ? -1 : 0,
+				backgroundColor:'white'
+		}
+
 		// Those are the states we need to passe to subPages, so that they are aware of the context : then we can use 'back' redirection from sub pages.
 		const deliveryZoneRedirectState = {
 			pathname: '/delivery-zone',

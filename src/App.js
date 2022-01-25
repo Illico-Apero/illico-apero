@@ -21,6 +21,7 @@ import Checkout from './screens/Checkout';
 import configuration from './config/configuration.json';
 import { Alert } from '@material-ui/lab';
 import { Typography } from '@material-ui/core';
+import NotFound from './screens/NotFound';
 
 
 function App() {
@@ -66,6 +67,7 @@ function App() {
                             <Route path='/about' component={About} />
                             <Route path='/category' component={Category} />
                             <Route path='/checkout' component={Checkout} />
+                            <Route component={NotFound} />
                         </Switch>
                     </div>
 

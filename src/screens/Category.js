@@ -5,7 +5,7 @@ import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import {
 	Avatar, Dialog, DialogTitle, List, ListItem, ListItemAvatar, ListItemText,
-	CircularProgress, Grid, Snackbar, Typography
+	CircularProgress, Grid, Snackbar, Typography, Accordion, AccordionSummary, AccordionDetails
 } from '@material-ui/core';
 
 import IllicoSimpleAppBar from "../components/IllicoSimpleAppBar";
@@ -25,6 +25,7 @@ import FrontEndLogService from '../network/services/FrontEndLogService';
 import { Alert } from '@material-ui/lab';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
 import IllicoBottomBarAlert from '../components/IllicoBottomBarAlert';
+import { ExpandMoreRounded } from '@material-ui/icons';
 
 //TODO : Stock handling (Formula (home.js) & products (category.js))
 /**
@@ -181,6 +182,24 @@ export default class Category extends IllicoReactComponent {
 		});
 	}
 
+	getProductsByType(type) {
+			return this.state.products.filter(product => product.type === type);
+	}
+
+	getAllProductsTypes() {
+		return [...new Set(this.state.products.map(product => product.type))];
+	}
+
+	playAccordionSound(event, expanded) {
+		if(expanded) {
+			IllicoAudio.playUiUnlockAudio();
+		}
+		else {
+			IllicoAudio.playUiLockAudio();
+		}
+	}
+
+
 	render() {
 		// according to the previous page passed within the props, we use it as a return page for the AppBar. By default, we use '/' (home)
 		const previousPageRedirection = RedirectionStateHandler.getRedirectionStateWithSlideDownWithGivenPreviousPage('/home');
@@ -221,6 +240,33 @@ export default class Category extends IllicoReactComponent {
 							this.state.products !== null ?
 							<>
 								<div id='products' style={{ marginBottom: '5em' }}>
+								{
+									this.state.category === 'Spiritueux' ?
+										<div>
+										{
+											this.getAllProductsTypes().map(
+											(type, index) => (
+												<Accordion defaultExpanded={true} key={index} style={{width:'95%', marginRight:'auto', marginLeft:'auto', marginBottom:'2em'}} onChange={(event, expanded) => this.playAccordionSound(event, expanded)}>
+													<AccordionSummary expandIcon={<ExpandMoreRounded />}>
+														{type}
+													</AccordionSummary>
+													<AccordionDetails>
+													<Grid container spacing={3} xs={12}>
+														{
+															this.getProductsByType(type).map(
+															(product, index) => (
+																<Grid key={index} item xs>
+																	<IllicoProduct product={product} onBasketAddClick={() => this.addProductToCart(product)} />
+																</Grid>
+															))
+														}
+													</Grid>
+													</AccordionDetails>
+												</Accordion>
+											))
+										}
+										</div>
+									:
 									<Grid container spacing={3} xs={12}>
 										{
 											this.state.products.map(
@@ -231,6 +277,8 @@ export default class Category extends IllicoReactComponent {
 												))
 										}
 									</Grid>
+								}
+
 								</div>
 							</>
 								:

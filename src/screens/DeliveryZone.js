@@ -23,7 +23,7 @@ export default class DeliveryZone extends IllicoReactComponent {
 
 	render() {
 
-		const deliveryZoneRedirectState = {
+		const defaultDeliveryZoneRedirectStateRegister = {
 			pathname: '/register',
 			state: {
 				backUrl: '/'
@@ -33,7 +33,7 @@ export default class DeliveryZone extends IllicoReactComponent {
 
 		return (
 			<div>
-				<IllicoSimpleAppBar to={deliveryZoneRedirectState} title='Zone de livraison éligible' />
+				<IllicoSimpleAppBar to={defaultDeliveryZoneRedirectStateRegister} title='Zone de livraison éligible' />
 				<div>
 				</div>
 				<img style={{maxWidth:'100%', maxHeight:'100%'}} alt='Zone de livraison' src='/img/delivery_zone.png'/>

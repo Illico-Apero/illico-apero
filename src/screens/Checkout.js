@@ -262,7 +262,11 @@ export default class Checkout extends IllicoReactComponent {
 														this.state.cartEntity.cartProductsByIdCart.length > 0 || this.state.cartEntity.cartFormulasByIdCart.length > 0 ?
 
 														<div id='checkout-loaded-non-empty'>
+														
 															<div id='items-recap'>
+															<Typography variant='h6' style={{ color: '#b26a00' }}>
+																Livré en 30 minutes en moyenne !*		
+															</Typography>
 																{
 																	this.isEverythingOKforCartOperations() ?
 																		<Grid container style={{ marginTop: '2em' }}>
@@ -343,7 +347,7 @@ export default class Checkout extends IllicoReactComponent {
 																{
 																	this.isEverythingOKforCartOperations() ?
 																		<>
-																			<Typography variant='h6' style={{ color: '#b26a00', marginBottom: '0.5em' }}>
+																			<Typography variant='h6' style={{ color: '#b26a00', marginTop:'2em' }}>
 																				Récapitulatif
 																			</Typography>
 																			<>
@@ -484,6 +488,17 @@ export default class Checkout extends IllicoReactComponent {
 																	<div style={{ width: '300px', marginLeft: 'auto', marginRight: 'auto' }}>
 																		<Paypal userEntity={this.state.userEntity} cartEntity={this.state.cartEntity} paymentPlacedCallback={this.paymentPlacedCallback} />
 																	</div>
+																</div>
+																<div id='legal-terms'>
+																{
+																	/*TODO : NB, Cela redirige l'utilisateur vers les legal terms et en cliquant sur back, il retourne à l'accueil. */
+																}
+																<Typography variant='body1' style={{ marginTop: '4em', color: '#b26a00', fontSize:'10px' }}>
+																	En payant, je déclare avoir lu et accepté les <a href='/legal-terms'>CGV/CGU</a> de l'application.
+																</Typography>
+																<Typography variant='body1' style={{ color: '#b26a00', fontSize:'10px' }}>
+																	*Délai de livraison moyen observé.
+																</Typography>
 																</div>
 															</div>
 															<div id='floating-price-recap' style={{ marginTop: '4em' }}>

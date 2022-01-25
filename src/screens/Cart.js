@@ -411,7 +411,7 @@ export default class Cart extends IllicoReactComponent {
 		return (
 			this.state.loaded ?
 				<>
-					<IllicoTopNavigation title='Panier' backUrl='/profile' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
+					<IllicoTopNavigation title='Panier' backUrl='/Cart' isUserLoggedIn={this.state.isUserLoggedIn} userEntity={this.state.userEntity} />
 					{
 						this.state.isUserLoggedIn ?
 							<div id='cart'> {
@@ -485,7 +485,7 @@ export default class Cart extends IllicoReactComponent {
 																	<Typography variant='body1' style={{ marginTop: '0.3em', color: '#b26a00', marginBottom: '0.5em' }}>
 																		Code promotionnel
 																	</Typography>
-																	<TextField id="promotion-code" label="Saisir votre code promo" variant="outlined" color="secondary" value={this.state.promotionCodeTextField}
+																	<TextField style={{backgroundColor:'white'}} id="promotion-code" label="Saisir votre code promo" variant="outlined" color="secondary" value={this.state.promotionCodeTextField}
 																		onChange={(event) => this.handlePromotionChange(event.target.value)} />
 
 																	<div id='confirm-promotion' style={{ marginTop: '1em' }}>

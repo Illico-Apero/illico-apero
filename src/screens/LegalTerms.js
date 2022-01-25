@@ -4,6 +4,7 @@ import IllicoSimpleAppBar from "../components/IllicoSimpleAppBar";
 import { Typography } from '@material-ui/core';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler'
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import { Link } from 'react-router-dom';
 
 export default class LegalTerms extends IllicoReactComponent {
 
@@ -33,11 +34,11 @@ export default class LegalTerms extends IllicoReactComponent {
 				<div>
 					<IllicoSimpleAppBar to={previousPageRedirection} title='Mentions légales' />
 
-					<Typography variant='body1' style={{marginBottom:'2em'}}>
+					<Typography variant='body1' style={{marginBottom:'2em', width:'90%', marginRight:'auto', marginLeft:'auto'}}>
 					Illico Apéro permet la vente en ligne d'alcools et de produits apéritifs en livraison rapide.
-					Nous intervenons sur l'agglomération de Dijon et alentours, les addresses éligibles à la livraison sont indiquées à l'inscription sur la page suivante : &nbsp;
-					 <a href="https://78.198.125.180:3000/delivery-zone">Zone de livraison</a>
+					Nous intervenons sur l'agglomération de Dijon et alentours, les addresses éligibles à la livraison sont situées dans un rayon de 5km autour du centre de Dijon :
 					</Typography>
+					<img style={{maxWidth:'100%', maxHeight:'100%', marginBottom:'2em'}} alt='Zone de livraison' src='/img/delivery_zone.png'/>
 
 
 					<Typography variant='h4' style={{marginBottom:'1em'}}>
