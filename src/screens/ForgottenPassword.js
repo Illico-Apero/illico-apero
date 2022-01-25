@@ -3,6 +3,7 @@ import Slide from '@material-ui/core/Slide';
 import IllicoSimpleAppBar from '../components/IllicoSimpleAppBar';
 import RedirectionStateHandler from '../helpers/RedirectionStateHandler';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
+import { Alert } from '@material-ui/lab';
 
 export default class ForgottenPassword extends IllicoReactComponent {
 
@@ -25,7 +26,11 @@ export default class ForgottenPassword extends IllicoReactComponent {
 			<div>
 				<IllicoSimpleAppBar to={previousPageRedirection} title='Mot de passe oublié ?' />
 				<Slide direction={slideDirection} in={this.state.loaded} mountOnEnter unmountOnExit timeout={800}>
-					<div></div>
+					<div>
+					<Alert severity='info' elevation={3} style={{ marginTop: '2em', marginBottom: '2em', marginLeft: 'auto', marginRight: 'auto', width: '260px', textAlign: 'left' }}>
+						Cette fonctionnalité n'est pas encore disponible 😥. Contactez-nous si vous rencontrez des soucis de connexion.
+					</Alert>
+					</div>
 				</Slide>
 			</div>
 		)
