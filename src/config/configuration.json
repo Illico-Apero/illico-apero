@@ -1,8 +1,8 @@
 {
     "server": {
-        "host": "https://illapp.fr",
+        "host": "localhost",
         "port": 9412,
-        "baseUrl": "https://illapp.fr:9412/api/v1/"
+        "baseUrl": "http://localhost:9412/api/v1/"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",
@@ -29,6 +29,6 @@
         "getIfValid":"promotion/get-if-valid",
         "logVisit":"visitor/log-visit"
     },
-    "debug":false,
+    "debug":true,
     "maintenance":false
 }

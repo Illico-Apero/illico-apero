@@ -29,6 +29,6 @@
         "getIfValid":"promotion/get-if-valid",
         "logVisit":"visitor/log-visit"
     },
-    "debug":false,
+    "debug":true,
     "maintenance":false
 }
