@@ -267,6 +267,18 @@ export default class Category extends IllicoReactComponent {
 										}
 										</div>
 									:
+										this.state.category === 'Bière' ?
+											<Grid container spacing={3} xs={12}>
+												{
+													this.state.products.sort((a, b) => b.createdAt - a.createdAt).map( // FEATURE : SORT BY NEWEST PRODUCT
+													(product, index) => (
+													<Grid key={index} item xs>
+													<IllicoProduct product={product} onBasketAddClick={() => this.addProductToCart(product)} />
+													</Grid>
+													))
+												}
+											</Grid>
+											:
 									<Grid container spacing={3} xs={12}>
 										{
 											this.state.products.map(
