@@ -130,9 +130,15 @@ export default class IllicoTopNavigation extends React.Component {
                                     <MenuItem component={Link} to={legalTermsRedirectState} onClick={() => this.handleGeneralMenuAnchorClose()}>
                                             Mentions Légales, CGV et CGU
                                     </MenuItem>
-                                    <MenuItem onClick={() => this.handleDisconnect()}>
+                                    {
+                                        this.props.isUserLoggedIn && this.props.userEntity !== null && this.state.loaded ? 
+                                        <MenuItem onClick={() => this.handleDisconnect()}>
                                             Me déconnecter
-                                    </MenuItem>
+                                        </MenuItem>
+                                        :
+                                        null
+                                    }
+
                                 </Menu>
                             </div>
                             <div style={{flexGrow:1, width:'65%'}}> {/* fills in the empty space */}
