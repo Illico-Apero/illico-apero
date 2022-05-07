@@ -1,8 +1,8 @@
 {
     "server": {
-        "host": "https://illapp.fr",
+        "host": "https://illicoapero.fr",
         "port": 9412,
-        "baseUrl": "https://illapp.fr:9412/api/v1"
+        "baseUrl": "https://illicoapero.fr:9412/api/v1"
     },
     "endpoints": {
         "getDeliveryRadius": "address/get-delivery-radius",

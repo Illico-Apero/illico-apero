@@ -17,7 +17,6 @@ import StoreEntity from '../models/StoreEntity';
 import ApiResponse from '../models/api/ApiResponse';
 import { CircularProgress } from '@material-ui/core';
 import configuration from '../config/configuration.json'
-import { Alert } from '@material-ui/lab';
 import IllicoReactComponent from '../components/Generic/IllicoReactComponent';
 import IllicoExceptionallyClosed from '../components/IllicoExceptionallyClosed';
 
